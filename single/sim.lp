@@ -67,37 +67,47 @@ relation(Q1,Q2,T,R) :- guessed(relation(Q1,Q2,T,R)).
     dec(Q1, OLD, NEW).
 
 % Proportionality
-delta(TO, T, RATE) :-
-    proportionality(1, FROM, TO, T),
+:- proportionality(1, FROM, TO, T),
     not blocked(FROM,TO,T),
-    delta(FROM, T, RATE).
+    delta(FROM, T, RATE),
+    not delta(TO, T, RATE).
 
-delta(TO, T, RATE) :-
-    proportionality(-1, FROM, TO, T),
+:-  proportionality(-1, FROM, TO, T),
     not blocked(FROM,TO,T),
     flip(delta,CONVERSE, RATE),
-    delta(FROM, T, CONVERSE).
+    delta(FROM, T, CONVERSE),
+    not delta(TO, T, RATE).
 
 % Influence
-delta(TO, NEXT, RATE) :- timestep(T,NEXT),
+:- timestep(T,NEXT),
     influence(RATE, FROM, TO, T),
     delta(FROM, T, PREVIOUS),
     effective(FROM,NEXT),
-    not blocked(FROM,TO,NEXT).
+    not blocked(FROM,TO,NEXT),
+    not delta(TO, NEXT, RATE).
 
 effective(INFLUENCE, T) :-
     value(INFLUENCE, T, EFFECTIVE),
     EFFECTIVE > 0.
 
+% STATE WHISE CONSTRAINT:
+% an active influence can not have another delta than the expected one particularly when guessed.
+:- influence(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
+    RATE != DELTA.
+
+% an active proportionality can not have another delta than the expected one particularly when guessed.
+:- proportionality(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
+    RATE != DELTA.
+
 
 % Correspondence
 % For Landmark Correspondence use Conditionals!
-value(Q2, T, VALUE) :- correspondence(Q1, Q2, T), value(Q1, T, VALUE).
-value(Q1, T, VALUE) :- correspondence(Q1, Q2, T), value(Q2, T, VALUE).
+ :- correspondence(Q1, Q2, T), value(Q1, T, VALUE), not value(Q2, T, VALUE).
+ :- correspondence(Q1, Q2, T), value(Q2, T, VALUE), not value(Q1, T, VALUE).
 
 % Inverse Correspondence means nessessary flipped values on quantityspace
-value(Q1, T, VALUE) :- correspondence_inverse(Q1, Q2, T), flip(Q2, VALUE, FLIPPED), value(Q2, T, FLIPPED).
-value(Q2, T, VALUE) :- correspondence_inverse(Q1, Q2, T), flip(Q1, VALUE, FLIPPED), value(Q1, T, FLIPPED).
+:- correspondence_inverse(Q1, Q2, T), flip(Q2, VALUE, FLIPPED), value(Q2, T, FLIPPED), not value(Q1, T, VALUE).
+:- correspondence_inverse(Q1, Q2, T), flip(Q1, VALUE, FLIPPED), value(Q1, T, FLIPPED), not value(Q2, T, VALUE).
 
 flip(SCALE, VALUE, FLIPPED) :- 
     quantityspace(SCALE, VALUE),
@@ -133,22 +143,22 @@ blocked(OTHER, TARGET, STATE) :-
 relation(I,O) :- competing(I,T,O,STATE), timepoint(STATE).
 
 % Concrete Relations
-relation(I,O,STATE, 0) :-
-    relation(I,O),
+:- relation(I,O),
     value(I,STATE,0),
-    value(O,STATE,0).
+    value(O,STATE,0),
+    not relation(I,O,STATE, 0).
 
-relation(I,O,STATE, 1) :-
-    relation(I,O),
+:- relation(I,O),
     value(I,STATE,IV),
     value(O,STATE,OV),
-    IV > OV.
+    IV > OV,
+    not relation(I,O,STATE, 1).
 
-relation(I,O,STATE, -1) :-
-    relation(I,O),
+:- relation(I,O),
     value(I,STATE,IV),
     value(O,STATE,OV),
-    IV < OV.
+    IV < OV,
+    not relation(I,O,STATE, -1).
 
     
 
@@ -188,12 +198,13 @@ relation(I,O,STATE, -1) :-
     delta(Q2,T,-1).
 
 
-relation(I,O,NEXT,REL * SAME) :- timestep(T,NEXT), relation(I,O,T,0),
+:- timestep(T,NEXT), relation(I,O,T,0),
     delta(I,T,SAME), delta(O,T,SAME), SAME != 0,
     influence(SAME,ANYI,I,T), influence(SAME,ANYO,O,T),
     not blocked(ANYI,I,T), not blocked(ANYO,O,T),
     effective(ANYI,T), effective(ANYO,T),
-    relation(ANYI,ANYO,T,REL).
+    relation(ANYI,ANYO,T,REL),
+    not relation(I,O,NEXT,REL * SAME).
 
 % Forbidden transition Special clause
 % When the last relation was a "=" then the transition can not work against the faster changing quantity

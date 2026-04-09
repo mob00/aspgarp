@@ -1,4 +1,4 @@
-% Model Fragments:
+% % Model Fragments:
 
 proportionality(1, size, shade).
 

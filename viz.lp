@@ -1,0 +1,1 @@
+attr(edge,(A,B), dir, forward) :- edge((A,B)).

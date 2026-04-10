@@ -26,20 +26,20 @@ effective(INFLUENCE, T) :-
 % STATE WHISE CONSTRAINT:
 % an active influence can not have another delta than the expected one particularly when guessed.
 violation :- influence(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
-    RATE != DELTA.
+    RATE != DELTA, active(T).
 
 % an active proportionality can not have another delta than the expected one particularly when guessed.
 violation :- proportionality(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
-    RATE != DELTA.
+    RATE != DELTA, active(T).
 
 % Correspondence
 % For Landmark Correspondence use Conditionals!
-violation :- correspondence(Q1, Q2, T), value(Q1, T, VALUE), not value(Q2, T, VALUE).
-violation :- correspondence(Q1, Q2, T), value(Q2, T, VALUE), not value(Q1, T, VALUE).
+violation :- correspondence(Q1, Q2, T), value(Q1, T, VALUE), not value(Q2, T, VALUE), active(T).
+violation :- correspondence(Q1, Q2, T), value(Q2, T, VALUE), not value(Q1, T, VALUE), active(T).
 
 % Inverse Correspondence means nessessary flipped values on quantityspace
-violation :- correspondence_inverse(Q1, Q2, T), flip(Q2, VALUE, FLIPPED), value(Q2, T, FLIPPED), not value(Q1, T, VALUE).
-violation :- correspondence_inverse(Q1, Q2, T), flip(Q1, VALUE, FLIPPED), value(Q1, T, FLIPPED), not value(Q2, T, VALUE).
+violation :- correspondence_inverse(Q1, Q2, T), flip(Q2, VALUE, FLIPPED), value(Q2, T, FLIPPED), not value(Q1, T, VALUE), active(T).
+violation :- correspondence_inverse(Q1, Q2, T), flip(Q1, VALUE, FLIPPED), value(Q1, T, FLIPPED), not value(Q2, T, VALUE), active(T).
 
 flip(SCALE, VALUE, FLIPPED) :- 
     quantityspace(SCALE, VALUE),

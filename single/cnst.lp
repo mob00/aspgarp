@@ -3,13 +3,13 @@
 violation :- proportionality(1, FROM, TO, T),
     not blocked(FROM,TO,T),
     delta(FROM, T, RATE),
-    not delta(TO, T, RATE).
+    not delta(TO, T, RATE), active(T).
 
 violation :-  proportionality(-1, FROM, TO, T),
     not blocked(FROM,TO,T),
     flip(delta,CONVERSE, RATE),
     delta(FROM, T, CONVERSE),
-    not delta(TO, T, RATE).
+    not delta(TO, T, RATE),active(T).
 
 % Influence
 violation :- timestep(T,NEXT),
@@ -17,7 +17,7 @@ violation :- timestep(T,NEXT),
     delta(FROM, T, PREVIOUS),
     effective(FROM,NEXT),
     not blocked(FROM,TO,NEXT),
-    not delta(TO, NEXT, RATE).
+    not delta(TO, NEXT, RATE), active(NEXT).
 
 effective(INFLUENCE, T) :-
     value(INFLUENCE, T, EFFECTIVE),

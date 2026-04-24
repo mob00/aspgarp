@@ -1,36 +1,83 @@
 
-% Proportionality
-violation :- proportionality(1, FROM, TO, T),
-    not blocked(FROM,TO,T),
-    delta(FROM, T, RATE),
-    not delta(TO, T, RATE), active(T).
+% % Proportionality
+% violation :- proportionality(1, FROM, TO, T),
+%     not blocked(FROM,TO,T),
+%     delta(FROM, T, RATE),
+%     not delta(TO, T, RATE), active(T).
 
-violation :-  proportionality(-1, FROM, TO, T),
-    not blocked(FROM,TO,T),
-    flip(delta,CONVERSE, RATE),
-    delta(FROM, T, CONVERSE),
-    not delta(TO, T, RATE),active(T).
+% violation :-  proportionality(-1, FROM, TO, T),
+%     not blocked(FROM,TO,T),
+%     flip(delta,CONVERSE, RATE),
+%     delta(FROM, T, CONVERSE),
+%     not delta(TO, T, RATE),active(T).
 
-% Influence
-violation :- timestep(T,NEXT),
-    influence(RATE, FROM, TO, T),
-    delta(FROM, T, PREVIOUS),
-    effective(FROM,NEXT),
-    not blocked(FROM,TO,NEXT),
-    not delta(TO, NEXT, RATE), active(NEXT).
+% % Influence
+% violation :- timestep(T,NEXT),
+%     influence(RATE, FROM, TO, T),
+%     delta(FROM, T, PREVIOUS),
+%     effective(FROM,NEXT),
+%     not blocked(FROM,TO,NEXT),
+%     not delta(TO, NEXT, RATE), active(NEXT).
 
-effective(INFLUENCE, T) :-
-    value(INFLUENCE, T, EFFECTIVE),
-    EFFECTIVE > 0.
+% effective(INFLUENCE, T) :-
+%     value(INFLUENCE, T, EFFECTIVE),
+%     EFFECTIVE > 0.
 
-% STATE WHISE CONSTRAINT:
-% an active influence can not have another delta than the expected one particularly when guessed.
-violation :- influence(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
-    RATE != DELTA, active(T).
+% % STATE WHISE CONSTRAINT:
+% % an active influence can not have another delta than the expected one particularly when guessed.
+% violation :- influence(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
+%     RATE != DELTA, active(T).
 
-% an active proportionality can not have another delta than the expected one particularly when guessed.
-violation :- proportionality(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
-    RATE != DELTA, active(T).
+% % an active proportionality can not have another delta than the expected one particularly when guessed.
+% violation :- proportionality(RATE, FROM, TO, T), delta(FROM, T, DELTA), effective(FROM,T), not blocked(FROM,TO,T),
+%     RATE != DELTA, active(T).
+
+
+% --- zero / none landmark for direct influences ---
+zero(Q,V) :- quantityspace(Q,V,zero).
+zero(Q,V) :- quantityspace(Q,V,none).
+
+source_sign(Q,T, 1) :- value(Q,T,V), zero(Q,Z), V > Z.
+source_sign(Q,T, 0) :- value(Q,T,Z), zero(Q,Z).
+source_sign(Q,T,-1) :- value(Q,T,V), zero(Q,Z), V < Z.
+
+polarity(1).
+polarity(-1).
+sign(-1..1).
+
+influence_delta(P,S,D) :-
+    polarity(P), sign(S),
+    D = P * S,
+    quantityspace(delta,D).
+
+prop_delta( 1,D,D)  :- quantityspace(delta,D).
+prop_delta(-1,D,FD) :- flip(delta,D,FD).
+
+% Direct influence:
+% source MAGNITUDE sign determines target DERIVATIVE.
+violation :- active(T),
+    influence(P, From, To, T),
+    source_sign(From,T,S),
+    influence_delta(P,S,D),
+    not blocked(From,To,T),
+    not delta(To,T,D).
+
+% Proportionality:
+% source DERIVATIVE determines target DERIVATIVE.
+violation :- active(T),
+    proportionality(P, From, To, T),
+    delta(From,T,DF),
+    prop_delta(P,DF,DT),
+    not blocked(From,To,T),
+    not delta(To,T,DT).
+
+qmin(Q,MIN) :- quantity(Q), MIN = #min { V : quantityspace(Q,V) }.
+qmax(Q,MAX) :- quantity(Q), MAX = #max { V : quantityspace(Q,V) }.
+
+:- active(T), qmin(Q,MIN), value(Q,T,MIN), delta(Q,T,-1).
+:- active(T), qmax(Q,MAX), value(Q,T,MAX), delta(Q,T, 1).
+
+
 
 % Correspondence
 % For Landmark Correspondence use Conditionals!

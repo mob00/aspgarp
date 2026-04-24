@@ -181,8 +181,25 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 % This version assumes one unopposed active influence per target.
 % Later, for full Garp3, replace this with contribution summation / ambiguity
 % handling when multiple influences affect the same target.
+% :- holds_constraint(T, influence(P,From,To)),
+%    mag_sign(T,From,Sign),
+%    influence_expected_dir(P,Sign,ExpectedDir),
+%    holds_dir(T,To,ActualDir),
+%    ExpectedDir != ActualDir.
+
 :- holds_constraint(T, influence(P,From,To)),
    mag_sign(T,From,Sign),
    influence_expected_dir(P,Sign,ExpectedDir),
    holds_dir(T,To,ActualDir),
-   ExpectedDir != ActualDir.
+   ExpectedDir != ActualDir,
+   not influence_saturated(T,To,ExpectedDir).
+
+% Positive influence is saturated at the upper terminal landmark.
+influence_saturated(T,V,inc) :-
+    last_landmark(V,L),
+    holds(T,V,land(L),std).
+
+% Negative influence is saturated at the lower terminal landmark.
+influence_saturated(T,V,dec) :-
+    first_landmark(V,L),
+    holds(T,V,land(L),std).

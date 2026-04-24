@@ -141,29 +141,7 @@ holds_precond(T,X) :- precond(X, true), time(T).
 
 % ADAPTER STUFF:
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Terminal value correspondence for this toy model
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% This is model-specific.
-%
-% Without this, the causal structure also allows static equilibria such as:
-%   size small, growth none, neutral
-% because I+(growth,size) says growth none -> size std.
-%
-% This correspondence says:
-%   growth none iff size large.
-%
-% That is what gives the textbook three-state behaviour.
-%
 
-:- time(T),
-   holds_mag(T, growth, land(zero)),
-   not holds_mag(T, size, land(large)).
-
-:- time(T),
-   holds_mag(T, size, land(large)),
-   not holds_mag(T, growth, land(zero)).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

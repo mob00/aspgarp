@@ -51,19 +51,24 @@ adjacent_landmark(growth, zero, inf).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Reference
+% Reference Model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% % More growth causes tree size to increase.
 influence(1, growth, size).
 
-% Larger/increasing size gives more shade.
-proportionality(1, size, shade).
+% proportionality(1, size, shade).
 
-% Size and shade have matching qualitative magnitudes.
-correspondence(size, shade).
+% correspondence(size, shade).
 
-% Increasing size reduces growth.
-proportionality(-1, size, growth).
+% proportionality(-1, size, growth).
 
 
+% Terminal value correspondence for this toy model
+
+% :- time(T),
+%    holds_mag(T, growth, land(zero)),
+%    not holds_mag(T, size, land(large)).
+
+% :- time(T),
+%    holds_mag(T, size, land(large)),
+%    not holds_mag(T, growth, land(zero)).

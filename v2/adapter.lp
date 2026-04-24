@@ -20,4 +20,33 @@ obs(holds(Var,Label,DirLabel)) :-
     mag_label(Var,Mag,Label),
     dir_label(Dir,DirLabel).
 
-#show obs/1.
+
+obsT(holds(0,Var,Label,DirLabel)) :-
+    time(T),
+    T = p(from),
+    holds(T,Var,Mag,Dir),
+    mag_label(Var,Mag,Label),
+    dir_label(Dir,DirLabel).
+
+obsT(holds(1,Var,Label,DirLabel)) :-
+    time(T),
+    T = p(to),
+    holds(T,Var,Mag,Dir),
+    mag_label(Var,Mag,Label),
+    dir_label(Dir,DirLabel).
+
+obsT(holds(1,Var,Label,DirLabel)) :-
+    time(T),
+    T = i(from,to),
+    time(p(from)),
+    holds(T,Var,Mag,Dir),
+    mag_label(Var,Mag,Label),
+    dir_label(Dir,DirLabel).
+
+obsT(holds(0,Var,Label,DirLabel)) :-
+    time(T),
+    T = i(from,to),
+    time(p(to)),
+    holds(T,Var,Mag,Dir),
+    mag_label(Var,Mag,Label),
+    dir_label(Dir,DirLabel).

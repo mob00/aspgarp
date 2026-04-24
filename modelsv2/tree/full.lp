@@ -139,7 +139,7 @@ display_state(T,Q,Label,DirLabel) :-
     mag_label(Q,Mag,Label),
     dir_label(Dir,DirLabel).
 
-#show display_state/4.
+% #show display_state/4.
 
 % #show holds/4.
 

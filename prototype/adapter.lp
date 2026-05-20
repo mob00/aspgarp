@@ -14,11 +14,13 @@ obs_time(p(from)) :-
 obs_time(p(to)) :-
     to_state.
 
+% Pbservations for cannon state
 obs(holds(Var,Mag,Dir)) :-
     obs_time(T),
     holds(T,Var,Mag,Dir).
 
 
+% Observations for transitions
 obsT(holds(0,Var,Mag,Dir)) :-
     time(T),
     T = p(from),

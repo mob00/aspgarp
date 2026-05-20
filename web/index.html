@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCN-Repair-Solver</title>
+</head>
+<body>
+
+  <script src="https://cdn.jsdelivr.net/npm/clingo-wasm@0.1.0"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+  <script src="demo/util.js"></script>
+
+  <div class="container">
+    <h1>Qualitative Constraint Network Solver</h1>
+    
+    <label for="code-editor">QCN:</label>
+    <textarea id="code-editor" name="code-editor">
+% Example QCN
+1 2 ( o si )
+1 4 ( di b )
+2 3 ( fi si o )
+2 4 ( di d o )
+3 4 ( b bi )
+    </textarea>
+
+    <button id="alert-button">Solve!</button>
+
+    <div class="graph-container" id="graph-container"></div>
+
+    <label for="result-text">Solution:</label>
+    <textarea id="result-text" name="result-text" readonly></textarea>
+  </div>
+
+<script>
+  const viz = new Viz();
+
+  function updateGraph() {
+    const inputText = document.getElementById('code-editor').value;
+    const result = parseQCNInput(inputText);
+    console.log(result.graphvizString);
+    
+    window.aspString = result.aspString;
+
+    // Render Graph
+    viz.renderSVGElement(result.graphvizString, { engine: "circo" })
+      .then(svgElement => {
+        const container = document.getElementById('graph-container');
+        container.innerHTML = ''; // Clear previous graph
+        container.appendChild(svgElement);
+      })
+      .catch(error => console.error("Viz.js Error:", error));
+  }
+
+  // Update graph when input changes
+  document.getElementById('code-editor').addEventListener('input', updateGraph);
+
+  // Trigger initial graph rendering
+  updateGraph();
+
+  document.getElementById('alert-button').addEventListener('click', async function() {
+    console.log(window.aspString);
+    const result = await solveQCN(window.aspString);
+    const witnesses = result['Call'][0]['Witnesses'];
+    
+    document.getElementById('result-text').value = witnesses.map(w => w['Value']).join('\n');
+    console.log(witnesses);
+  });
+
+</script>
+
+</body>
+</html>

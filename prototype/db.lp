@@ -38,8 +38,6 @@ relative_qmag(V,interval(X,T),land(Y),pos)  :- qmag(V,interval(X,T)), relative_q
 relative_qmag(V,interval(X,Y),interval(U,W),neg)  :- qmag(V,interval(X,Y)), qmag(V,interval(U,W)).
 
 
-%hold(T,X) :- precond(X,bound,V,IE1,L,IE2,U).
-
 
 
 

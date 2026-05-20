@@ -121,80 +121,6 @@ holds_precond(T,X) :- precond(X, greater_than, Var, Landmark), time(T),
 % precond(true,neg,false).
 holds_precond(T,X) :- precond(X, true), time(T).
 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % Terminal landmark constraints
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% :- time(T),
-%    last_landmark(V,L),
-%    holds(T,V,land(L),inc).
-
-% :- time(T),
-%    first_landmark(V,L),
-%    holds(T,V,land(L),dec).
-
-
-% Specify goal
-:- not holds(p(M),V,Q,D), goal(V,Q,D), timemax(M).
-
-
-
-
-% ADAPTER STUFF:
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Initial scenario
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Start with a small tree, small shade, and positive-but-decreasing growth.
-%
-% To test another transition, replace these init/3 facts with the state you
-% want as the new origin.
-%
-
-% time(p(from)).
-
-% init(size,   land(small),         inc).
-% init(shade,  land(small),         inc).
-% init(growth, interval(zero,inf),  dec).
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Display helpers
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% dir_label(inc, increase).
-% dir_label(std, neutral).
-% dir_label(dec, decrease).
-
-% % Collapse QSIM magnitudes back to Garp-like labels.
-% mag_label(size,  land(small),              small).
-% mag_label(size,  interval(small,medium),   small).
-% mag_label(size,  land(medium),             medium).
-% mag_label(size,  interval(medium,large),   medium).
-% mag_label(size,  land(large),              large).
-
-% mag_label(shade, land(small),              small).
-% mag_label(shade, interval(small,medium),   small).
-% mag_label(shade, land(medium),             medium).
-% mag_label(shade, interval(medium,large),   medium).
-% mag_label(shade, land(large),              large).
-
-% mag_label(growth, land(zero),              none).
-% mag_label(growth, interval(zero,inf),      positive).
-
-% display_state(T,Q,Label,DirLabel) :-
-%     time(T),
-%     holds(T,Q,Mag,Dir),
-%     mag_label(Q,Mag,Label),
-%     dir_label(Dir,DirLabel).
-
-% #show display_state/4.
-
-% #show holds/4.
-
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % State well-formedness
@@ -217,15 +143,3 @@ holds_precond(T,X) :- precond(X, true), time(T).
    holds(T,V,_,D1),
    holds(T,V,_,D2),
    D1 != D2.
-
-% % In QSIM, a non-discrete variable cannot remain at a landmark during
-% % an interval while changing. If it is exactly at a landmark for an
-% % interval, its direction must be std.
-% :- time(i(T,T1)),
-%    not discrete(V),
-%    holds(i(T,T1),V,land(_),D),
-%    D != std.
-
-% % No states may hold at inactive point times.
-% :- holds(p(T),_,_,_),
-%    not time(p(T)).

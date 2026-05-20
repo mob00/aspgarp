@@ -1,22 +1,30 @@
+%
+% Tree and Shade test model for Garp-style constraints over ASPQSIM
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Quantities
-entity(tree).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-quantity(tree,size).
-quantity(tree,shade).
-quantity(tree,growth).
+qvar(size).
+qvar(shade).
+qvar(growth).
 
-% Quantity space
-quantityspace(size,   0, small).
-quantityspace(size,   1, medium).
-quantityspace(size,   2, large).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Quantity spaces
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-quantityspace(shade,  0, small).
-quantityspace(shade,  1, medium).
-quantityspace(shade,  2, large).
+landmark(size, small).
+landmark(size, large).
 
-% Quantity space
-quantityspace(growth,   0, none).
-quantityspace(growth,   1, positive).
+adjacent_landmark(size, small, large).
 
+landmark(shade, small).
+landmark(shade, large).
 
+adjacent_landmark(shade, small, large).
 
+landmark(growth, zero).
+landmark(growth, inf).
+
+adjacent_landmark(growth, zero, inf).

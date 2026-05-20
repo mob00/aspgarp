@@ -52,6 +52,9 @@ rule(garp_proportionality(P,From,To), true, proportionality(P,From,To)) :-
 rule(garp_correspondence(Q1,Q2), true, correspondence(Q1,Q2)) :-
     correspondence(Q1,Q2).
 
+rule(garp_correspondence(Q1,Q2), true, correspondence(Q1,Q2)) :-
+    correspondence(Q1,Q2).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helpers
@@ -136,6 +139,23 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
    holds_mag(T,Q2,M2),
    M1 != M2.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Directed value correspondences
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% value_correspondence(Q1,Q2,M1,M2)
+%
+% Means:
+%
+%   if Q1 has M1, then Q2 has M2
+%
+% but not necessarily the other way around.
+%
+
+
+:- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
+   holds_mag(T,Q1,M1),
+   not holds_mag(T,Q2,M2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Garp proportionalities

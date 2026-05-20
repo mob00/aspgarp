@@ -106,29 +106,29 @@ dir_change_allowed(T0,T1,V) :-
     exogenous(V,T1).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Terminal stopping exception
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% If a variable reaches the last landmark while increasing, it may become std.
-% If a variable reaches the first landmark while decreasing, it may become std.
-%
-% This allows transitions like:
-%
-%   interval(medium,large), inc  ->  land(large), std
-%
-% without treating that as an unexplained derivative change.
-%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Terminal stopping exception
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %
+% % If a variable reaches the last landmark while increasing, it may become std.
+% % If a variable reaches the first landmark while decreasing, it may become std.
+% %
+% % This allows transitions like:
+% %
+% %   interval(medium,large), inc  ->  land(large), std
+% %
+% % without treating that as an unexplained derivative change.
+% %
 
-dir_change_allowed(i(from,to),p(to),V) :-
-    holds(i(from,to),V,interval(_,L),inc),
-    holds(p(to),V,land(L),std),
-    last_landmark(V,L).
+% dir_change_allowed(i(from,to),p(to),V) :-
+%     holds(i(from,to),V,interval(_,L),inc),
+%     holds(p(to),V,land(L),std),
+%     last_landmark(V,L).
 
-dir_change_allowed(i(from,to),p(to),V) :-
-    holds(i(from,to),V,interval(L,_),dec),
-    holds(p(to),V,land(L),std),
-    first_landmark(V,L).
+% dir_change_allowed(i(from,to),p(to),V) :-
+%     holds(i(from,to),V,interval(L,_),dec),
+%     holds(p(to),V,land(L),std),
+%     first_landmark(V,L).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -11,7 +11,6 @@ qvar(size).
 qvar(shade).
 qvar(growth).
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Quantity spaces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,14 +52,19 @@ adjacent_landmark(growth, zero, inf).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Reference Model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+precond(all, true).
 
-influence(1, growth, size).
+rule(r1,all,influence(1, growth, size)).
 
-% proportionality(1, size, shade).
+rule(r2,all,proportionality(1, size, shade)).
 
-% correspondence(size, shade).
+rule(r3,all,correspondence(size, shade)).
 
-% proportionality(-1, size, growth).
+rule(r4,all,proportionality(-1, size, growth)).
+
+rule(r5,all,value_correspondence(growth, land(zero), size, land(large))).
+rule(r6,all,value_correspondence(size, land(large), growth, land(zero))).
+
 
 
 % Terminal value correspondence for this toy model

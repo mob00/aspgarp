@@ -1,3 +1,4 @@
+% States
 node(A) :- statelabel(A, _).
 
 attr(node, A, label, LABEL)  :- statelabel(A, LABEL).

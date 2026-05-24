@@ -23,3 +23,9 @@ rule(r10,all,correspondence(ramount, rpressure)).
 
 rule(r11,all,proportionality(1, lpressure, flow)).
 rule(r12,all,proportionality(-1, rpressure, flow)).
+
+rule(r13,all,landmark_relation(lheight, land(point), llevel, land(max), eq)).
+rule(r14,all,landmark_relation(rhight, land(point), rlevel, land(max), eq)).
+
+rule
+

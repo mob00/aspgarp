@@ -25,6 +25,6 @@ landmark(shade, large).
 adjacent_landmark(shade, small, large).
 
 landmark(growth, zero).
-landmark(growth, inf).
+landmark(growth, inf). 
 
 adjacent_landmark(growth, zero, inf).

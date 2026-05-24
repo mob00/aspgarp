@@ -123,7 +123,7 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 % This assumes Q1 and Q2 use matching qmag terms.
 % For more complex Garp3 models with differently named quantity spaces,
 % later add an explicit correspondence map instead of direct equality.
-:- holds_constraint(T, correspondence(Q1,Q2)),
+violation :- holds_constraint(T, correspondence(Q1,Q2)),
    holds_mag(T,Q1,M1),
    holds_mag(T,Q2,M2),
    M1 != M2.
@@ -142,7 +142,7 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 %
 
 
-:- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
+violation :- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
    holds_mag(T,Q1,M1),
    not holds_mag(T,Q2,M2).
 
@@ -156,7 +156,7 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 %   To's direction equals From's direction.
 %
 % Crucially: this does NOT copy magnitude.
-:- holds_constraint(T, proportionality(1,From,To)),
+violation :- holds_constraint(T, proportionality(1,From,To)),
    holds_dir(T,From,DFrom),
    holds_dir(T,To,DTo),
    DFrom != DTo.
@@ -165,7 +165,7 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 %
 % P-(From,To):
 %   To's direction is the opposite of From's direction.
-:- holds_constraint(T, proportionality(-1,From,To)),
+violation :- holds_constraint(T, proportionality(-1,From,To)),
    holds_dir(T,From,DFrom),
    holds_dir(T,To,DTo),
    not qdirNeg(DFrom,DTo).
@@ -196,7 +196,7 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 %    holds_dir(T,To,ActualDir),
 %    ExpectedDir != ActualDir.
 
-:- holds_constraint(T, influence(P,From,To)),
+violation :- holds_constraint(T, influence(P,From,To)),
    mag_sign(T,From,Sign),
    influence_expected_dir(P,Sign,ExpectedDir),
    holds_dir(T,To,ActualDir),

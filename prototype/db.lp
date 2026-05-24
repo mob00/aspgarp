@@ -60,7 +60,10 @@ land_rank(Q,L,N) :-
 qmag_rank(Q,land(L),I) :- qmag(Q,land(L)), land_rank(Q,L,N), I = 2 * N.
 qmag_rank(Q,interval(L1,L2),I) :- qmag(Q,interval(L1,L2)), land_rank(Q,L1,N), I = 2 * N + 1.
 
-qspace_max_rank(Q,Max) :- var(Q), Max = #max { I : qmag_rank(Q,_,I) }.
+qspace_max_rank(Q,Max) :-
+    qvar(Q),
+    Max = #max { I : qmag_rank(Q,_,I) }.
+
 
 same_qspace_length(Q1,Q2) :-
     qspace_max_rank(Q1,Max),

@@ -14,6 +14,8 @@
 
 #program base.
 
+qvar(X) :- qvar(X,_).
+
 first_landmark(V,Y) :- adjacent_landmark(V,Y,Z), not adjacent_landmark(V,X,Y) : landmark(V,X).
 last_landmark(V,Y)  :- adjacent_landmark(V,X,Y), not adjacent_landmark(V,Y,Z) : landmark(V,Z).
 %only one landmark case

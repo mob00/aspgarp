@@ -175,7 +175,6 @@ violation :- holds_constraint(T, proportionality(-1,From,To)),
    holds_dir(T,To,DTo),
    not qdirNeg(DFrom,DTo).
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Garp direct influences
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -195,18 +194,31 @@ violation :- holds_constraint(T, proportionality(-1,From,To)),
 % This version assumes one unopposed active influence per target.
 % Later, for full Garp3, replace this with contribution summation / ambiguity
 % handling when multiple influences affect the same target.
-% :- holds_constraint(T, influence(P,From,To)),
-%    mag_sign(T,From,Sign),
-%    influence_expected_dir(P,Sign,ExpectedDir),
-%    holds_dir(T,To,ActualDir),
-%    ExpectedDir != ActualDir.
 
 violation :- holds_constraint(T, influence(P,From,To)),
    mag_sign(T,From,Sign),
    influence_expected_dir(P,Sign,ExpectedDir),
    holds_dir(T,To,ActualDir),
    ExpectedDir != ActualDir,
-   not influence_saturated(T,To,ExpectedDir).
+   not influence_saturated(T,To,ExpectedDir),
+   not holds_constraint(T, influence(-P,_,To)). % allow opposite influence to prevent violation
+
+% resolve infulence with opposite polarity if target is saturated in expected direction
+violation :- 
+   holds_constraint(T, influence(P1,From,To)), 
+   holds_constraint(T, influence(P2,Other,To)), 
+   mag_sign(T,From,FromSign),
+   mag_sign(T,Other,OtherSign),
+   influence_expected_dir(P1,FromSign,ExpectedDir),
+   influence_expected_dir(P2,OtherSign,OppositeExpectedDir),
+   influence_expected_dir(P1,FromSign,ExpectedDir),
+   influence_expected_dir(P2,FromSign,OppositeExpectedDir),
+   holds_dir(T,To,ActualDir),
+   ExpectedDir != ActualDir,
+   not influence_saturated(T,To,ExpectedDir),
+   not holds_constraint(T, influence(-P2,_,To)). % allow opposite influence to saturate and prevent violation
+
+
 
 % Positive influence is saturated at the upper terminal landmark.
 influence_saturated(T,V,inc) :-
@@ -217,3 +229,9 @@ influence_saturated(T,V,inc) :-
 influence_saturated(T,V,dec) :-
     first_landmark(V,L),
     holds(T,V,land(L),std).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Garp Point Constraints
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

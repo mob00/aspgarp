@@ -1,8 +1,7 @@
-
-qvar(birth).
-qvar(death).
-qvar(population).
-qvar(biomass).
+qvar(birth,1).
+qvar(death,2).
+qvar(population,3).
+qvar(biomass,4).
 
 landmark(birth, zero).
 landmark(birth, inf).

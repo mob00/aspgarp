@@ -39,6 +39,29 @@ relative_qmag(V,interval(X,Y),interval(U,W),neg)  :- qmag(V,interval(X,Y)), qmag
 
 
 
+%%% ADDED:
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Quantity-space mirror
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+land_before(Q,L1,L2) :- adjacent_landmark(Q,L1,L2).
+land_before(Q,L1,L3) :- adjacent_landmark(Q,L1,L2), land_before(Q,L2,L3).
 
+land_rank(Q,L,N) :-
+    landmark(Q,L),
+    not invalid_landmark(L),
+    N = #count {
+        P : land_before(Q,P,L),
+            landmark(Q,P),
+            not invalid_landmark(P)
+    }.
+
+qmag_rank(Q,land(L),I) :- qmag(Q,land(L)), land_rank(Q,L,N), I = 2 * N.
+qmag_rank(Q,interval(L1,L2),I) :- qmag(Q,interval(L1,L2)), land_rank(Q,L1,N), I = 2 * N + 1.
+
+qspace_max_rank(Q,Max) :- var(Q), Max = #max { I : qmag_rank(Q,_,I) }.
+
+same_qspace_length(Q1,Q2) :-
+    qspace_max_rank(Q1,Max),
+    qspace_max_rank(Q2,Max).

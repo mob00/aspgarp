@@ -2,6 +2,7 @@
 qvar(birth).
 qvar(death).
 qvar(population).
+qvar(biomass).
 
 landmark(birth, zero).
 landmark(birth, inf).
@@ -16,3 +17,9 @@ landmark(population, medium).
 landmark(population, inf).
 adjacent_landmark(population, zero, medium).
 adjacent_landmark(population, medium, inf).
+
+landmark(biomass, zero).
+landmark(biomass, medium).
+landmark(biomass, inf).
+adjacent_landmark(biomass, zero, medium).
+adjacent_landmark(biomass, medium, inf).

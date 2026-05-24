@@ -4,7 +4,8 @@
 % This file intentionally uses ASPQSIM's state generation / transition rules,
 % but replaces the original QSIM QDE constraint vocabulary with Garp-style:
 %
-%   correspondence(Q1,Q2)
+%   correspondence(1,Q1,Q2)
+%   correspondence(-1,Q1,Q2)
 %   proportionality( 1, From, To)
 %   proportionality(-1, From, To)
 %   influence( 1, From, To)
@@ -37,7 +38,7 @@ holds_constraint(T,C) :-
 % Example:
 %   influence(1,growth,size).
 %   proportionality(-1,size,growth).
-%   correspondence(size,shade).
+%   correspondence(1,size,shade).
 %
 % These are automatically treated as unconditional rules.
 holds_precond(T,true) :-
@@ -49,11 +50,9 @@ rule(garp_influence(P,From,To), true, influence(P,From,To)) :-
 rule(garp_proportionality(P,From,To), true, proportionality(P,From,To)) :-
     proportionality(P,From,To).
 
-rule(garp_correspondence(Q1,Q2), true, correspondence(Q1,Q2)) :-
-    correspondence(Q1,Q2).
 
-rule(garp_correspondence(Q1,Q2), true, correspondence(Q1,Q2)) :-
-    correspondence(Q1,Q2).
+rule(garp_correspondence(P,Q1,Q2), true, correspondence(P,Q1,Q2)) :-
+    correspondence(P,Q1,Q2).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -115,18 +114,24 @@ influence_expected_dir(-1,Sign,OppositeDir) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Garp correspondence
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% correspondence(Q1,Q2)
+% correspondence(1,Q1,Q2)
 %
 % Corresponding quantities must have the same qualitative magnitude.
 %
 % This assumes Q1 and Q2 use matching qmag terms.
 % For more complex Garp3 models with differently named quantity spaces,
 % later add an explicit correspondence map instead of direct equality.
-violation :- holds_constraint(T, correspondence(Q1,Q2)),
-   holds_mag(T,Q1,M1),
-   holds_mag(T,Q2,M2),
-   M1 != M2.
+
+% Correpondence
+corresponding_qmag(1,Q1,M1,Q2,M2) :- same_qspace_length(Q1,Q2), qmag_rank(Q1,M1,I), qmag_rank(Q2,M2,I).
+% Inverse Correspondence
+corresponding_qmag(-1,Q1,M1,Q2,M2) :- same_qspace_length(Q1,Q2), qspace_max_rank(Q1,Max), qmag_rank(Q1,M1,I1), qmag_rank(Q2,M2,I2), I2 = Max - I1.
+
+violation :-
+    holds_constraint(T, correspondence(P,Q1,Q2)),
+    holds_mag(T,Q1,M1),
+    holds_mag(T,Q2,M2),
+    not corresponding_qmag(P,Q1,M1,Q2,M2).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Directed value correspondences

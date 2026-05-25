@@ -36,9 +36,9 @@ holds_constraint(T,C) :-
 holds_relation(T,(A,B),R) :-
     qcn_relation(T,qvar(A),qvar(B),R).
 
-holds_relation(T,(A,B),RI) :-
-    qcn_relation(T,qvar(A),qvar(B),R),
-    converse(point,R,RI).
+holds_relation(T,(A,B),R) :-
+    qcn_relation(T,qvar(B),qvar(A),RI),
+    converse(point,RI,R).
 
 influence_dir(T,From,To,Dir) :-
     holds_constraint(T,influence(P,From,To)),

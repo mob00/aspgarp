@@ -33,6 +33,18 @@ holds_constraint(T,N,C) :-
 holds_constraint(T,C) :-
     holds_constraint(T,_,C).
 
+suspended_constraint(T,influence(P,From,To)) :-
+    holds_constraint(T,influence(P,From,To)),
+    holds_constraint(T,influence(-P,Other,To)),
+    Other != From,
+    qcn_relation(T,qvar(Other),qvar(From),gt).
+
+suspended_constraint(T,influence(P,From,To)) :-
+    holds_constraint(T,influence(P,From,To)),
+    holds_constraint(T,influence(-P,Other,To)),
+    Other != From,
+    qcn_relation(T,qvar(From),qvar(Other),lt).
+
 % Convenience: allow unconditional Garp facts directly.
 %
 % Example:
@@ -196,28 +208,12 @@ violation :- holds_constraint(T, proportionality(-1,From,To)),
 % handling when multiple influences affect the same target.
 
 violation :- holds_constraint(T, influence(P,From,To)),
+   not suspended_constraint(T,influence(P,From,To)),
    mag_sign(T,From,Sign),
    influence_expected_dir(P,Sign,ExpectedDir),
    holds_dir(T,To,ActualDir),
    ExpectedDir != ActualDir,
-   not influence_saturated(T,To,ExpectedDir),
-   not holds_constraint(T, influence(-P,_,To)). % allow opposite influence to prevent violation
-
-% resolve infulence with opposite polarity if target is saturated in expected direction
-violation :- 
-   holds_constraint(T, influence(P1,From,To)), 
-   holds_constraint(T, influence(P2,Other,To)), 
-   mag_sign(T,From,FromSign),
-   mag_sign(T,Other,OtherSign),
-   influence_expected_dir(P1,FromSign,ExpectedDir),
-   influence_expected_dir(P2,OtherSign,OppositeExpectedDir),
-   influence_expected_dir(P1,FromSign,ExpectedDir),
-   influence_expected_dir(P2,FromSign,OppositeExpectedDir),
-   holds_dir(T,To,ActualDir),
-   ExpectedDir != ActualDir,
-   not influence_saturated(T,To,ExpectedDir),
-   not holds_constraint(T, influence(-P2,_,To)). % allow opposite influence to saturate and prevent violation
-
+   not influence_saturated(T,To,ExpectedDir).
 
 
 % Positive influence is saturated at the upper terminal landmark.

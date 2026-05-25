@@ -9,6 +9,8 @@ rule(r5,true,proportionality(1, population, birth)).
 rule(r6,true,proportionality(1, population, death)).
 
 % rule(r7,true,algebraic(birth, lt, death)).
+observable(relation(birth, death)).
+observable(relation(death, birth)).
 
 rule(r8,true,value_correspondence(population, land(zero), birth, land(zero))).
 rule(r9,true,value_correspondence(population, land(zero), death, land(zero))).

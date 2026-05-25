@@ -33,11 +33,11 @@ holds_constraint(T,N,C) :-
 holds_constraint(T,C) :-
     holds_constraint(T,_,C).
 
-relation(T,A,B,R) :-
-    qcn_relation(T,A,B,R).
+holds_relation(T,(A,B),R) :-
+    qcn_relation(T,qvar(A),qvar(B),R).
 
-relation(T,B,A,RI) :-
-    qcn_relation(T,A,B,R),
+holds_relation(T,(A,B),RI) :-
+    qcn_relation(T,qvar(A),qvar(B),R),
     converse(point,R,RI).
 
 influence_dir(T,From,To,Dir) :-
@@ -51,13 +51,13 @@ suspended_constraint(T,influence(P,From,To)) :-
     influence_dir(T,Other,To,OtherDir),
     From != Other,
     Dir != OtherDir,
-    relation(T,qvar(From),qvar(Other),lt).
+    holds_relation(T,(From,Other),lt).
 
 equal_influence_balance(T,To) :-
     holds_constraint(T,influence(P,From,To)),
     holds_constraint(T,influence(-P,Other,To)),
     Other != From,
-    relation(T,qvar(From),qvar(Other),eq).
+    holds_relation(T,(From,Other),eq).
 
 suspended_constraint(T,influence(P,From,To)) :-
     equal_influence_balance(T,To),

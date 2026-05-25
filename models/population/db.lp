@@ -1,7 +1,10 @@
-qvar(birth,1).
-qvar(death,2).
-qvar(population,3).
+qvar(birth).
+qvar(death).
+qvar(population).
 % qvar(biomass,4).
+
+observable(V) :- qvar(V).
+
 
 landmark(birth, zero).
 landmark(birth, inf).

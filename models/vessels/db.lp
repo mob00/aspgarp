@@ -7,12 +7,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 qvar(ramount).
-qvar(rhight).
+qvar(rheight).
 qvar(rlevel).
 qvar(rpressure).
 
 qvar(lamount).
-qvar(lhight).
+qvar(lheight).
 qvar(llevel).
 qvar(lpressure).
 
@@ -27,7 +27,7 @@ landmark(ramount, zero).
 landmark(ramount, max).
 adjacent_landmark(ramount, zero, max).
 
-landmark(rhight, point).
+landmark(rheight, point).
 
 landmark(rlevel, zero).
 landmark(rlevel, max).
@@ -41,7 +41,7 @@ landmark(lamount, zero).
 landmark(lamount, max).
 adjacent_landmark(lamount, zero, max).
 
-landmark(lhight, point).
+landmark(lheight, point).
 
 landmark(llevel, zero).
 landmark(llevel, max).

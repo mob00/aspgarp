@@ -25,9 +25,16 @@ rule(r11,all,proportionality(1, lpressure, flow)).
 rule(r12,all,proportionality(-1, rpressure, flow)).
 
 rule(r13,all,landmark_relation(lheight, land(point), llevel, land(max), eq)).
-rule(r14,all,landmark_relation(rhight, land(point), rlevel, land(max), eq)).
+rule(r14,all,landmark_relation(rheight, land(point), rlevel, land(max), eq)).
 
-rule(r15,all,landmark_relation(rhight, land(point), lheight, land(point), eq)).
+rule(r15,all,landmark_relation(rheight, land(point), lheight, land(point), eq)).
+
+rule(r16,all,minus(lpressure, rpressure, flow)).
+
+rule(r17,all,algebraic(llevel, eq, lpressure)).
+rule(r18,all,algebraic(rlevel, eq, rpressure)).
+
+% observable(relation(lheight, llevel)).
 
 
 

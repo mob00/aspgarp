@@ -9,6 +9,12 @@ qcn_edge(FROM,TO) :- qcn_node(FROM), qcn_node(TO), FROM < TO.
 qcn_constraint(T, qvar(Var1), qvar(Var2), Rel) :- holds_constraint(T, algebraic(Var1, Rel, Var2)), qvar(Var1) < qvar(Var2).
 qcn_constraint(T, qvar(Var2), qvar(Var1), RelInv) :- holds_constraint(T, algebraic(Var1, Rel, Var2)),qvar(Var1) > qvar(Var2), converse(point, Rel, RelInv).
 
+%Model constraints: landmarks 
+qcn_constraint(T, landmark(Var,Land1), landmark(Var,Land2), Rel) :- holds_constraint(T, landmark_relation(Var, land(Land1), Var, land(Land2), Rel)), landmark(Var, Land1), landmark(Var, Land2), Land1 < Land2.
+qcn_constraint(T, landmark(Var,Land2), landmark(Var,Land1), RelInv) :- holds_constraint(T, landmark_relation(Var, land(Land1), Var, land(Land2), Rel)), landmark(Var, Land1), landmark(Var, Land2), Land1 < Land2, converse(point, Rel, RelInv).    
+
+
+
 % Landmakr ordering constraints
 qcn_constraint(T, landmark(V,L1), landmark(V,L2), lt) :- adjacent_landmark(V,L1,L2), time(T).
 qcn_constraint(T, landmark(V,L2), landmark(V,L1), gt) :- adjacent_landmark(V,L1,L2), time(T).

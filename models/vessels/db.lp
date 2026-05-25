@@ -16,6 +16,8 @@ qvar(lhight).
 qvar(llevel).
 qvar(lpressure).
 
+observable(V) :- qvar(V).
+
 qvar(flow).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

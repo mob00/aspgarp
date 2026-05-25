@@ -143,3 +143,12 @@ holds_precond(T,X) :- precond(X, true), time(T).
    holds(T,V,_,D1),
    holds(T,V,_,D2),
    D1 != D2.
+
+
+:- time(T),
+    first_landmark(V,L),
+    holds(T,V,land(L),dec).
+
+:-  time(T),
+    last_landmark(V,L),
+    holds(T,V,land(L),inc).

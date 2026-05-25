@@ -45,6 +45,17 @@ suspended_constraint(T,influence(P,From,To)) :-
     Other != From,
     qcn_relation(T,qvar(From),qvar(Other),lt).
 
+
+equal_influence_balance(T,To) :-
+    holds_constraint(T,influence(P,From,To)),
+    holds_constraint(T,influence(-P,Other,To)),
+    Other != From,
+    qcn_relation(T,qvar(From),qvar(Other),eq).
+
+suspended_constraint(T,influence(P,From,To)) :-
+    equal_influence_balance(T,To),
+    holds_constraint(T,influence(P,From,To)).
+
 % Convenience: allow unconditional Garp facts directly.
 %
 % Example:
@@ -215,6 +226,10 @@ violation :- holds_constraint(T, influence(P,From,To)),
    ExpectedDir != ActualDir,
    not influence_saturated(T,To,ExpectedDir).
 
+violation :-
+    equal_influence_balance(T,To),
+    holds_dir(T,To,D),
+    D != std.
 
 % Positive influence is saturated at the upper terminal landmark.
 influence_saturated(T,V,inc) :-

@@ -1,19 +1,8 @@
 %
 % Garp-style derivative causality / inertia layer
 %
-% This layer prevents QSIM-style spontaneous changes of derivative.
-%
-% Policy:
-%   1. A non-neutral derivative must be causally supported.
-%   2. A derivative may change only if the target has an active causal
-%      dependency, is exogenous, or is forced to stop at a terminal landmark.
-%
 
 #program base.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Step relation between the two QSIM states in the single-transition encoding
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 qstep(p(from), i(from,to)) :-
     time(p(from)).
@@ -23,68 +12,57 @@ qstep(i(from,to), p(to)) :-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Causal targets
+% Direction support
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% A variable has causal derivative support if it is the target of an active
-% Garp dependency.
-%
-% influence(_,From,To)        supports derivative of To
-% proportionality(_,From,To)  supports derivative of To
-%
-% correspondence does NOT support a derivative by itself. It only constrains
-% magnitudes.
-%
 
-causal_target(T,To) :-
-    holds_constraint(T, influence(_,_,To)).
+prop_dir(1,D,D) :-
+    qdir(D).
 
-causal_target(T,To) :-
-    holds_constraint(T, proportionality(_,_,To)).
+prop_dir(-1,D,DI) :-
+    qdirNeg(D,DI).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Exogenous quantities
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Use this if you intentionally want a quantity to change without being caused
-% by another quantity.
-%
-% Example:
-%   exogenous(rainfall).
-%
-% or time-specific:
-%   exogenous(rainfall,p(from)).
-%   exogenous(rainfall,i(from,to)).
-%
+% Direct influence support.
+direction_supported(T,To,D) :-
+    holds_constraint(T,influence(P,From,To)),
+    influence_dir(T,From,To,D),
+    not suspended_constraint(T,influence(P,From,To)).
 
-causal_target(T,V) :-
+% Equal influence balance supports std.
+direction_supported(T,To,std) :-
+    equal_influence_balance(T,To).
+
+% Proportionality support.
+direction_supported(T,To,DTo) :-
+    holds_constraint(T,proportionality(P,From,To)),
+    holds_dir(T,From,DFrom),
+    prop_dir(P,DFrom,DTo).
+
+% Exogenous quantities may take any derivative.
+direction_supported(T,V,D) :-
     exogenous(V),
+    qdir(D),
     time(T).
 
-causal_target(T,V) :-
+direction_supported(T,V,D) :-
     exogenous(V,T),
+    qdir(D),
     time(T).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Rule 1: no non-neutral derivative without support
+% Rule 1: no non-neutral derivative without directional support
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Empty model consequence:
-%   no influence/proportionality/exogenous declarations
-%   => every variable must have direction std.
-%
 
 :- time(T),
    qvar(V),
    holds_dir(T,V,D),
    D != std,
-   not causal_target(T,V).
+   not direction_supported(T,V,D).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Rule 2: derivative changes need justification
+% Rule 2: derivative changes need source-state support
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 dir_changed(T0,T1,V) :-
@@ -93,14 +71,30 @@ dir_changed(T0,T1,V) :-
     holds_dir(T1,V,D1),
     D0 != D1.
 
+% A derivative may change to D if D was already supported in the source state.
 dir_change_allowed(T0,T1,V) :-
     qstep(T0,T1),
-    causal_target(T1,V).
+    holds_dir(T1,V,D),
+    direction_supported(T0,V,D).
 
+% A derivative may change to std if std is supported in the target state.
+% This handles newly reached balances.
 dir_change_allowed(T0,T1,V) :-
     qstep(T0,T1),
-    exogenous(V).
+    holds_dir(T1,V,std),
+    direction_supported(T1,V,std).
 
-dir_change_allowed(T0,T1,V) :-
-    qstep(T0,T1),
-    exogenous(V,T1).
+% Terminal stop: increasing into upper landmark.
+dir_change_allowed(i(from,to),p(to),V) :-
+    holds(i(from,to),V,interval(_,L),inc),
+    holds(p(to),V,land(L),std),
+    last_landmark(V,L).
+
+% Terminal stop: decreasing into lower landmark.
+dir_change_allowed(i(from,to),p(to),V) :-
+    holds(i(from,to),V,interval(L,_),dec),
+    holds(p(to),V,land(L),std),
+    first_landmark(V,L).
+
+:- dir_changed(T0,T1,V),
+   not dir_change_allowed(T0,T1,V).

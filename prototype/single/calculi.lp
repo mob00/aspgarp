@@ -51,3 +51,24 @@ qcn_constraint(T,B,A,RI) :-
     minus_implies(T,A,B,R),
     qcn_edge(B,A),
     converse(point,R,RI).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Align operand quantity spaces for MINUS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% For minus(A,B,C), A and B must be comparable.
+% Equal-ranked landmarks of A and B represent the same reference values.
+%
+
+minus_operand_landmark_eq(T,A,B,LA,LB) :-
+    holds_constraint(T,minus(A,B,_)),
+    land_rank(A,LA,N),
+    land_rank(B,LB,N).
+
+qcn_constraint(T,landmark(A,LA),landmark(B,LB),eq) :-
+    minus_operand_landmark_eq(T,A,B,LA,LB),
+    qcn_edge(landmark(A,LA),landmark(B,LB)).
+
+qcn_constraint(T,landmark(B,LB),landmark(A,LA),eq) :-
+    minus_operand_landmark_eq(T,A,B,LA,LB),
+    qcn_edge(landmark(B,LB),landmark(A,LA)).

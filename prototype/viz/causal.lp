@@ -25,8 +25,8 @@ directional_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)) :- ru
 % =============
 
 % Quantities
-node(qvar(V)) :- qvar(V,_).
-attr(node, qvar(V), label, V) :- qvar(V,_).
+node(qvar(V)) :- qvar(V).
+attr(node, qvar(V), label, V) :- qvar(V).
 
 % Causal Depencencies
 edge((qvar(From), qvar(To),RID)) :- rule(RID,_, CD), source(qvar(From), CD), target(qvar(To), CD).

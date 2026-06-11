@@ -11,7 +11,8 @@ component(proportionality(1,Q,R)) :- qvar(Q), qvar(R), Q != R.
 component(proportionality(-1,Q,R)) :- qvar(Q), qvar(R), Q != R.
 component(influence(1,Q,R)) :- qvar(Q), qvar(R), Q != R.
 component(influence(-1,Q,R)) :- qvar(Q), qvar(R), Q != R.
-component(correspondence(Q, R)) :- qvar(Q), qvar(R), Q != R.
+component(correspondence(1,Q, R)) :- qvar(Q), qvar(R), Q != R.
+component(correspondence(-1,Q, R)) :- qvar(Q), qvar(R), Q != R.
 component(value_correspondence(Q, land(QLM), R, land(RLM))) :- qvar(Q), qvar(R), Q != R, landmark(Q, QLM), landmark(R, RLM).
 
 0 {abduced(rule(RULE_ID, PC, COMPONENT)) : precond_ids(PC), component(COMPONENT) } 1 :- rule_ids(RULE_ID).

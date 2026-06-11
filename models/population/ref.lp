@@ -15,3 +15,17 @@ observable(relation(death, birth)).
 rule(r8,true,value_correspondence(population, land(zero), birth, land(zero))).
 rule(r9,true,value_correspondence(population, land(zero), death, land(zero))).
 
+% Domain assumption for the population example:
+% If population is non-zero, then birth and death are positive.
+
+violation :-
+    time(T),
+    holds_mag(T,population,MP),
+    relative_qmag(population,MP,land(zero),pos),
+    holds_mag(T,birth,land(zero)).
+
+violation :-
+    time(T),
+    holds_mag(T,population,MP),
+    relative_qmag(population,MP,land(zero),pos),
+    holds_mag(T,death,land(zero)).

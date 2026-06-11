@@ -28,6 +28,11 @@ direction_supported(T,To,D) :-
     influence_dir(T,From,To,D),
     not suspended_constraint(T,influence(P,From,To)).
 
+% justified(T,To,D) :-
+%     cd(T,influence(P,From,To)),
+%     effect(T,influence(P,From,To),D),
+%     not suspended_constraint(T,influence(P,From,To)).
+
 % Equal influence balance supports std.
 direction_supported(T,To,std) :-
     equal_influence_balance(T,To).

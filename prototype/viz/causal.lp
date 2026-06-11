@@ -39,6 +39,8 @@ edge((qvar(V1), qvar(V2), RID)) :- directional_value_correspondence(value_corres
 attr(edge, (qvar(V1), qvar(V2), RID), dir, forward) :- directional_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)), rule(RID,_, value_correspondence(V1, MAG1, V2, MAG2)).
 attr(edge, (qvar(V1), qvar(V2), RID), headlabel, MAG2) :- directional_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)), rule(RID,_, value_correspondence(V1, MAG1, V2, MAG2)).
 attr(edge, (qvar(V1), qvar(V2), RID), taillabel, MAG1) :- directional_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)), rule(RID,_, value_correspondence(V1, MAG1, V2, MAG2)).
+attr(edge, (qvar(V1), qvar(V2), RID), label, "V") :- directional_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)), rule(RID,_, value_correspondence(V1, MAG1, V2, MAG2)).
+
 
 % Undirected
 edge((qvar(V1), qvar(V2), RID)) :- undirected_value_correspondence(value_correspondence(V1, MAG1, V2, MAG2)), rule(RID,_, value_correspondence(V1, MAG1, V2, MAG2)).
@@ -57,3 +59,32 @@ attr(edge, (qvar(V1), qvar(V2), RID), label, DISPLAY) :- rule(RID,_,corresponden
 edge((qvar(V1), qvar(V2), RID)) :- rule(RID,_, algebraic(V1, REL, V2)).
 attr(edge, (qvar(V1), qvar(V2), RID), dir, forward) :- rule(RID,_, algebraic(V1, REL, V2)).
 attr(edge, (qvar(V1), qvar(V2), RID), label, REL) :- rule(RID,_, algebraic(V1, REL, V2)).
+
+
+
+% Minus Constraint
+% instanciate the minus as a node
+node(minus(In1, In2, Out)) :- rule(RID,_, minus(In1, In2, Out)).
+attr(node, minus(In1, In2, Out), label, "minus") :- rule(RID,_, minus(In1, In2, Out)).
+attr(node, minus(In1, In2, Out), shape, none) :- rule(RID,_, minus(In1, In2, Out)).
+
+edge((qvar(In1), minus(In1, In2, Out), RID)) :- rule(RID,_, minus(In1, In2, Out)).
+attr(edge, (qvar(In1), minus(In1, In2, Out), RID), dir, forward) :- rule(RID,_, minus(In1, In2, Out)).
+attr(edge, (qvar(In1), minus(In1, In2, Out), RID), label, 1) :- rule(RID,_, minus(In1, In2, Out)).
+edge((qvar(In2), minus(In1, In2, Out), RID)) :- rule(RID,_, minus(In1, In2, Out)).
+attr(edge, (qvar(In2), minus(In1, In2, Out), RID), dir, forward) :- rule(RID,_, minus(In1, In2, Out)).
+attr(edge, (qvar(In2), minus(In1, In2, Out), RID), label, 2) :- rule(RID,_, minus(In1, In2, Out)).
+edge((minus(In1, In2, Out), qvar(Out), RID)) :- rule(RID,_, minus(In1, In2, Out)).
+attr(edge, (minus(In1, In2, Out), qvar(Out), RID), dir, forward) :- rule(RID,_, minus(In1, In2, Out)).
+
+
+% % landmark relation
+% edge((landmark(V1,L1), landmark(V2,L2), RID)) :- rule(RID,_, landmark_relation(V1, land(L1), V2, land(L2), REL)).
+% attr(edge, (landmark(V1,L1), landmark(V2,L2), RID), dir, forward) :- rule(RID,_, landmark_relation(V1, land(L1), V2, land(L2), REL)).
+% attr(edge, (landmark(V1,L1), landmark(V2,L2), RID), label, REL) :- rule(RID,_, landmark_relation(V1, land(L1), V2, land(L2), REL)). 
+
+
+% rule(r13,all,landmark_relation(lheight, land(point), llevel, land(max), eq)).
+% rule(r14,all,landmark_relation(rheight, land(point), rlevel, land(max), eq)).
+
+% rule(r15,all,landmark_relation(rheight, land(point), lheight, land(point), eq)).

@@ -157,7 +157,7 @@ corresponding_qmag(1,Q1,M1,Q2,M2) :- same_qspace_length(Q1,Q2), qmag_rank(Q1,M1,
 % Inverse Correspondence
 corresponding_qmag(-1,Q1,M1,Q2,M2) :- same_qspace_length(Q1,Q2), qspace_max_rank(Q1,Max), qmag_rank(Q1,M1,I1), qmag_rank(Q2,M2,I2), I2 = Max - I1.
 
-violation :-
+violation(T) :-
     holds_constraint(T, correspondence(P,Q1,Q2)),
     holds_mag(T,Q1,M1),
     holds_mag(T,Q2,M2),
@@ -177,7 +177,7 @@ violation :-
 %
 
 
-violation :- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
+violation(T) :- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
    holds_mag(T,Q1,M1),
    not holds_mag(T,Q2,M2).
 
@@ -191,7 +191,7 @@ violation :- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
 %   To's direction equals From's direction.
 %
 % Crucially: this does NOT copy magnitude.
-violation :- holds_constraint(T, proportionality(1,From,To)),
+violation(T) :- holds_constraint(T, proportionality(1,From,To)),
    holds_dir(T,From,DFrom),
    holds_dir(T,To,DTo),
    DFrom != DTo.
@@ -200,7 +200,7 @@ violation :- holds_constraint(T, proportionality(1,From,To)),
 %
 % P-(From,To):
 %   To's direction is the opposite of From's direction.
-violation :- holds_constraint(T, proportionality(-1,From,To)),
+violation(T) :- holds_constraint(T, proportionality(-1,From,To)),
    holds_dir(T,From,DFrom),
    holds_dir(T,To,DTo),
    not qdirNeg(DFrom,DTo).
@@ -225,7 +225,7 @@ violation :- holds_constraint(T, proportionality(-1,From,To)),
 % Later, for full Garp3, replace this with contribution summation / ambiguity
 % handling when multiple influences affect the same target.
 
-violation :- holds_constraint(T, influence(P,From,To)),
+violation(T) :- holds_constraint(T, influence(P,From,To)),
    not suspended_constraint(T,influence(P,From,To)),
    mag_sign(T,From,Sign),
    influence_expected_dir(P,Sign,ExpectedDir),
@@ -233,7 +233,7 @@ violation :- holds_constraint(T, influence(P,From,To)),
    ExpectedDir != ActualDir,
    not influence_saturated(T,To,ExpectedDir).
 
-violation :-
+violation(T) :-
     equal_influence_balance(T,To),
     holds_dir(T,To,D),
     D != std.
@@ -249,7 +249,8 @@ influence_saturated(T,V,dec) :-
     holds(T,V,land(L),std).
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Garp Point Constraints
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
 
+violation :- violation(T).
+sviolation(S) :- violation(p((S,_))).
+sviolation(S) :- violation(i((S,_),(S,_))).

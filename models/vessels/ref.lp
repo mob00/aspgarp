@@ -34,7 +34,5 @@ rule(r16,all,minus(lpressure, rpressure, flow)).
 rule(r17,all,algebraic(llevel, eq, lpressure)).
 rule(r18,all,algebraic(rlevel, eq, rpressure)).
 
-% observable(relation(lheight, llevel)).
-
 
 

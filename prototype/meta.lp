@@ -1,3 +1,7 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Model Synthesis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 #const r = 1. % number of rules
 #const p = 1. % number of preconds
 
@@ -25,7 +29,6 @@ abduced(precond(PC,true)) :- precond_ids(PC).
 precond(PC, true) :- abduced(precond(PC, true)).
 
 %SYMMETRY BREAKING:
-
 comp_id(C,N) :-
     component(C),
     N = #count { C2 : component(C2), C2 < C }.

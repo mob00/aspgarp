@@ -1,3 +1,7 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Syntactic Constraints
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % ACTIVE PROPORTIONALITY MAY NOT BE CYCLIC
 proportionality_edge(T,Q,R) :-
     holds_constraint(T,_,proportionality(_,Q,R)),

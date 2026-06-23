@@ -2,9 +2,6 @@
 % Observation / projection layer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-
 from_state :-
     time(p(from)).
 
@@ -17,23 +14,16 @@ obs_time(p(from)) :-
 obs_time(p(to)) :-
     to_state.
 
-% Pbservations for cannon state
 obs(holds(Var,Mag,Dir)) :-
     obs_time(T),
     holds(T,Var,Mag,Dir),
     observable(Var).
 
-% observable(relation(birth, death)).
-
-% Pbservations for cannon state
 obs(holds_relation((From,To),Rel)):-
     obs_time(T),
     holds_relation(T,(From,To),Rel),
     observable(relation(From, To)).
     
-
-
-% Observations for transitions
 obsT(holds(0,Var,Mag,Dir)) :-
     time(T),
     T = p(from),

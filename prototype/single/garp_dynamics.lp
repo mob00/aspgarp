@@ -1,5 +1,5 @@
 %
-% Garp-style derivative causality / inertia layer
+% Garp causality and custom dynamics
 %
 
 #program base.
@@ -14,23 +14,14 @@ prop_dir(1,D,D) :-
 prop_dir(-1,D,DI) :-
     qdirNeg(D,DI).
 
-
-% Direct influence support.
 direction_supported(T,To,D) :-
     holds_constraint(T,influence(P,From,To)),
     influence_dir(T,From,To,D),
     not suspended_constraint(T,influence(P,From,To)).
 
-% justified(T,To,D) :-
-%     cd(T,influence(P,From,To)),
-%     effect(T,influence(P,From,To),D),
-%     not suspended_constraint(T,influence(P,From,To)).
-
-% Equal influence balance supports std.
 direction_supported(T,To,std) :-
     equal_influence_balance(T,To).
 
-% Proportionality support.
 direction_supported(T,To,DTo) :-
     holds_constraint(T,proportionality(P,From,To)),
     holds_dir(T,From,DFrom),
@@ -69,26 +60,22 @@ dir_changed(T0,T1,V) :-
     holds_dir(T1,V,D1),
     D0 != D1.
 
-% A derivative may change to D if D was already supported in the source state.
 dir_change_allowed(T0,T1,V) :-
     qstep(T0,T1),
     holds_dir(T1,V,D),
     direction_supported(T0,V,D).
 
-% A derivative may change to std if std is supported in the target state.
-% This handles newly reached balances.
+
 dir_change_allowed(T0,T1,V) :-
     qstep(T0,T1),
     holds_dir(T1,V,std),
     direction_supported(T1,V,std).
 
-% Terminal stop: increasing into upper landmark.
 dir_change_allowed(i(from,to),p(to),V) :-
     holds(i(from,to),V,interval(_,L),inc),
     holds(p(to),V,land(L),std),
     last_landmark(V,L).
 
-% Terminal stop: decreasing into lower landmark.
 dir_change_allowed(i(from,to),p(to),V) :-
     holds(i(from,to),V,interval(L,_),dec),
     holds(p(to),V,land(L),std),

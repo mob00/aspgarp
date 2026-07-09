@@ -24,22 +24,33 @@ influence_dir(T,From,To,Dir) :-
 
 suspended_constraint(T,influence(P,From,To)) :-
     holds_constraint(T,influence(P,From,To)),
+    influence_dir(T,From,To,std),
+    influence_dir(T,Other,To,OtherDir),
+    From != Other,
+    OtherDir != std.
+
+suspended_constraint(T,influence(P,From,To)) :-
+    holds_constraint(T,influence(P,From,To)),
     influence_dir(T,From,To,Dir),
     influence_dir(T,Other,To,OtherDir),
     From != Other,
-    Dir != OtherDir,
+    Dir != std,
+    OtherDir != std,
+    qdirNeg(Dir,OtherDir),
     holds_relation(T,(From,Other),lt).
 
 equal_influence_balance(T,To) :-
-    holds_constraint(T,influence(P,From,To)),
-    holds_constraint(T,influence(-P,Other,To)),
-    Other != From,
+    influence_dir(T,From,To,Dir),
+    influence_dir(T,Other,To,OtherDir),
+    From != Other,
+    Dir != std,
+    OtherDir != std,
+    qdirNeg(Dir,OtherDir),
     holds_relation(T,(From,Other),eq).
 
 suspended_constraint(T,influence(P,From,To)) :-
     equal_influence_balance(T,To),
     holds_constraint(T,influence(P,From,To)).
-
 holds_precond(T,true) :-
     time(T).
 

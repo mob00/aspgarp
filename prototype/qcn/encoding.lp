@@ -6,9 +6,44 @@ qcn_edge(FROM,TO) :- qcn_node(FROM), qcn_node(TO), FROM < TO.
 
 % CONSTRAINS ON QCN RELATIONS
 % Model Constraints
-qcn_constraint(T, qvar(Var1), qvar(Var2), Rel) :- holds_constraint(T, algebraic(Var1, Rel, Var2)), qvar(Var1) < qvar(Var2).
-qcn_constraint(T, qvar(Var2), qvar(Var1), RelInv) :- holds_constraint(T, algebraic(Var1, Rel, Var2)),qvar(Var1) > qvar(Var2), converse(point, Rel, RelInv).
+qcn_constraint(
+    T,
+    landmark(V1,L1),
+    landmark(V2,L2),
+    R
+) :-
+    holds_constraint(
+        T,
+        landmark_relation(
+            V1,land(L1),
+            V2,land(L2),
+            R
+        )
+    ),
+    qcn_edge(
+        landmark(V1,L1),
+        landmark(V2,L2)
+    ).
 
+qcn_constraint(
+    T,
+    landmark(V2,L2),
+    landmark(V1,L1),
+    RI
+) :-
+    holds_constraint(
+        T,
+        landmark_relation(
+            V1,land(L1),
+            V2,land(L2),
+            R
+        )
+    ),
+    qcn_edge(
+        landmark(V2,L2),
+        landmark(V1,L1)
+    ),
+    converse(point,R,RI).
 %Model constraints: landmarks
 qcn_raw_relation(
     T,
@@ -88,6 +123,16 @@ qcn_holds_relation(T,A,B,R) :-
 1 {qcn_relation(T,FROM,TO,RELATION): baserelation(point,RELATION)} 1:- qcn_edge(FROM,TO), time(T).
 
 % ALGEBRAIC CLOSURE
-:- qcn_relation(T,FROM,OVER,R1), qcn_relation(T,OVER,TO,R2), qcn_relation(T,FROM,TO,R3), not composition(point,R1,R2,R3), time(T), qcn_edge(FROM,TO).
-
+:- time(T),
+   qcn_node(A),
+   qcn_node(B),
+   qcn_node(C),
+   A != B,
+   B != C,
+   A != C,
+   qcn_holds_relation(T,A,B,R1),
+   qcn_holds_relation(T,B,C,R2),
+   qcn_holds_relation(T,A,C,R3),
+   not composition(point,R1,R2,R3).
+   
 % STATIC CONSTRAINTS:- qcn_relation(T,FROM,TO,REL), not qcn_constraint(T,FROM,TO,REL), qcn_constraint(T,FROM,TO,OTHER).

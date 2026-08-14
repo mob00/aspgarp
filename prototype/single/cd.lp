@@ -22,24 +22,99 @@ influence_dir(T,From,To,Dir) :-
     mag_sign(T,From,Sign),
     influence_expected_dir(P,Sign,Dir).
 
-suspended_constraint(T,influence(P,From,To)) :-
-    holds_constraint(T,influence(P,From,To)),
-    influence_dir(T,From,To,Dir),
-    influence_dir(T,Other,To,OtherDir),
-    From != Other,
-    Dir != OtherDir,
-    holds_relation(T,(From,Other),lt).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Influence resolution
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-equal_influence_balance(T,To) :-
-    holds_constraint(T,influence(P,From,To)),
-    holds_constraint(T,influence(-P,Other,To)),
-    Other != From,
-    holds_relation(T,(From,Other),eq).
+% A completed QCN assigns a base relation to every pair. Such an assignment
+% is a consistency witness, not necessarily knowledge stated by the model.
+% Only an active algebraic constraint counts as a known ordering when
+% resolving competing influences.
 
-suspended_constraint(T,influence(P,From,To)) :-
-    equal_influence_balance(T,To),
-    holds_constraint(T,influence(P,From,To)).
+known_influence_relation(T,A,B,R) :-
+    holds_constraint(T,algebraic(A,R,B)).
 
+known_influence_relation(T,B,A,RI) :-
+    holds_constraint(T,algebraic(A,R,B)),
+    converse(point,R,RI).
+
+
+% Canonical pair of non-zero, opposing contributions to the same target.
+
+competing_influences(T,A,B,To,DA,DB) :-
+    influence_dir(T,A,To,DA),
+    influence_dir(T,B,To,DB),
+    A < B,
+    DA != std,
+    DB != std,
+    qdirNeg(DA,DB).
+
+has_opposing_influence(T,From,To) :-
+    competing_influences(T,From,_,To,_,_).
+
+has_opposing_influence(T,From,To) :-
+    competing_influences(T,_,From,To,_,_).
+
+
+% An unopposed contribution determines the net direction. This also covers
+% several contributions that all point in the same direction.
+
+net_influence_dir(T,To,D) :-
+    influence_dir(T,From,To,D),
+    D != std,
+    not has_opposing_influence(T,From,To).
+
+
+% If every contribution is zero, the net influence is zero.
+
+nonzero_influence(T,To) :-
+    influence_dir(T,_,To,D),
+    D != std.
+
+net_influence_dir(T,To,std) :-
+    influence_dir(T,_,To,_),
+    not nonzero_influence(T,To).
+
+
+% Resolve two competing contributions when their ordering is known (! Limitation: we only handle two contributions at a time).
+
+net_influence_dir(T,To,DA) :-
+    competing_influences(T,A,B,To,DA,_),
+    known_influence_relation(T,A,B,gt).
+
+net_influence_dir(T,To,DB) :-
+    competing_influences(T,A,B,To,_,DB),
+    known_influence_relation(T,A,B,lt).
+
+net_influence_dir(T,To,std) :-
+    competing_influences(T,A,B,To,_,_),
+    known_influence_relation(T,A,B,eq).
+
+
+% With no stated ordering, Garp keeps all qualitative resolutions possible.
+% Importantly, this ambiguity is not turned into a persistent QCN relation.
+
+known_influence_order(T,A,B) :-
+    known_influence_relation(T,A,B,lt).
+
+known_influence_order(T,A,B) :-
+    known_influence_relation(T,A,B,eq).
+
+known_influence_order(T,A,B) :-
+    known_influence_relation(T,A,B,gt).
+
+unresolved_competing_influences(T,A,B,To,DA,DB) :-
+    competing_influences(T,A,B,To,DA,DB),
+    not known_influence_order(T,A,B).
+
+net_influence_dir(T,To,DA) :-
+    unresolved_competing_influences(T,_,_,To,DA,_).
+
+net_influence_dir(T,To,DB) :-
+    unresolved_competing_influences(T,_,_,To,_,DB).
+
+net_influence_dir(T,To,std) :-
+    unresolved_competing_influences(T,_,_,To,_,_).
 holds_precond(T,true) :-
     time(T).
 
@@ -131,23 +206,22 @@ violation(T) :- holds_constraint(T, proportionality(-1,From,To)),
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Garp direct influences
-% This version assumes one unopposed active influence per target.
-% Later, for full Garp3, replace this with contribution summation / ambiguity
-% handling when multiple influences affect the same target.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-violation(T) :- holds_constraint(T, influence(P,From,To)),
-   not suspended_constraint(T,influence(P,From,To)),
-   mag_sign(T,From,Sign),
-   influence_expected_dir(P,Sign,ExpectedDir),
-   holds_dir(T,To,ActualDir),
-   ExpectedDir != ActualDir,
-   not influence_saturated(T,To,ExpectedDir).
+influenced_target(T,To) :-
+    holds_constraint(T,influence(_,_,To)).
+
+net_influence_saturated(T,To) :-
+    holds_dir(T,To,std),
+    net_influence_dir(T,To,ExpectedDir),
+    ExpectedDir != std,
+    influence_saturated(T,To,ExpectedDir).
 
 violation(T) :-
-    equal_influence_balance(T,To),
-    holds_dir(T,To,D),
-    D != std.
+    influenced_target(T,To),
+    holds_dir(T,To,ActualDir),
+    not net_influence_dir(T,To,ActualDir),
+    not net_influence_saturated(T,To).
 
 % Positive influence is saturated at the upper terminal landmark.
 influence_saturated(T,V,inc) :-

@@ -27,45 +27,109 @@
 % Point to Interval
 %   time(T1) is required to ensure stopping at max time
 1 { holds(i(T, T1), QVar, interval(L1, L2), QDir) : qdir(QDir) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, interval(L1, L2), std).  % P8/I9
-1 { holds(i(T, T1), QVar, interval(L1, L2), inc) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, interval(L1, L2), inc).  % P5
-1 { holds(i(T, T1), QVar, interval(L1, L2), dec) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, interval(L1, L2), dec).  % P7
-1 { holds(i(T, T1), QVar, land(L1), std);
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, interval(L1, L2), std).
+1 {
+    holds(i(T, T1), QVar, interval(L1, L2), inc);
+    holds(i(T, T1), QVar, interval(L1, L2), std)
+} 1
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, interval(L1, L2), inc).
+1 {
+    holds(i(T, T1), QVar, interval(L1, L2), dec);
+    holds(i(T, T1), QVar, interval(L1, L2), std)
+} 1
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, interval(L1, L2), dec).
+1 { holds(i(T, T1), QVar, land(L1), QDir) : qdir(QDir);
     holds(i(T, T1), QVar, interval(L1, L2), inc) : qmag(QVar, interval(L1, L2));
     holds(i(T, T1), QVar, interval(L0, L1), dec) : qmag(QVar, interval(L0, L1)) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, land(L1), std).  % P1, P2, P3
-1 { holds(i(T, T1), QVar, interval(L1, L2), inc) : qmag(QVar, interval(L1, L2)) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, land(L1), inc).  % P4
-1 { holds(i(T, T1), QVar, interval(L0, L1), dec) : qmag(QVar, interval(L0, L1)) } 1
-    :- time(i(T,T1)), not discrete(QVar), holds(p(T), QVar, land(L1), dec).  % P5
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, land(L1), std).
+1 {
+    holds(i(T, T1), QVar, interval(L1, L2), inc) :
+        qmag(QVar, interval(L1, L2));
+    holds(i(T, T1), QVar, interval(L1, L2), std) :
+        qmag(QVar, interval(L1, L2))
+} 1
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, land(L1), inc).
+1 {
+    holds(i(T, T1), QVar, interval(L0, L1), dec) :
+        qmag(QVar, interval(L0, L1));
+    holds(i(T, T1), QVar, interval(L0, L1), std) :
+        qmag(QVar, interval(L0, L1))
+} 1
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       not discrete(QVar),
+       holds(p(T), QVar, land(L1), dec).
 
 % Interval to Point
-1 { holds(p(T1), QVar, interval(L1, L2), QDir) : time(p(T1)), qdir(QDir) } 1
-    :- not discrete(QVar), holds(i(T, T1), QVar, interval(L1, L2), std).  % I8/I9
+1 { holds(p(T1), QVar, interval(L1, L2), QDir) : qdir(QDir) } 1
+    :- qstep(i(T,T1), p(T1)),
+       time(p(T1)),
+       not discrete(QVar),
+       holds(i(T, T1), QVar, interval(L1, L2), std).
+
 1 { holds(p(T1), QVar, interval(L1, L2), inc);
     holds(p(T1), QVar, interval(L1, L2), std);
     holds(p(T1), QVar, land(L2), inc) : qmag(QVar, land(L2));
     holds(p(T1), QVar, land(L2), std) : qmag(QVar, land(L2)) } 1
-    :- not discrete(QVar), holds(i(T, T1), QVar, interval(L1, L2), inc).  % I4, I8, I3, I2
+    :- qstep(i(T,T1), p(T1)),
+       time(p(T1)),
+       not discrete(QVar),
+       holds(i(T, T1), QVar, interval(L1, L2), inc).
+
 1 { holds(p(T1), QVar, interval(L1, L2), dec);
     holds(p(T1), QVar, interval(L1, L2), std);
     holds(p(T1), QVar, land(L1), dec) : qmag(QVar, land(L1));
     holds(p(T1), QVar, land(L1), std) : qmag(QVar, land(L1)) } 1
-    :- not discrete(QVar), holds(i(T, T1), QVar, interval(L1, L2), dec).  % I7, I9, I6, I5
-1 { holds(p(T1), QVar, land(L1), std) } 1
-    :- not discrete(QVar), holds(i(T, T1), QVar, land(L1), std).  % I8/I9
+    :- qstep(i(T,T1), p(T1)),
+       time(p(T1)),
+       not discrete(QVar),
+       holds(i(T, T1), QVar, interval(L1, L2), dec).
+
+1 { holds(p(T1), QVar, land(L1), QDir) : qdir(QDir) } 1
+    :- qstep(i(T,T1), p(T1)),
+       time(p(T1)),
+       not discrete(QVar),
+       holds(i(T, T1), QVar, land(L1), std).
 
 % Discrete versions of state transitions
 1 { holds(i(T, T1), QVar, land(L1), std);
-    holds(i(T, T1), QVar, land(L0), std) : adjacent_landmark(QVar, L0, L1), not invalid_landmark(L0);
-    holds(i(T, T1), QVar, land(L2), std) : adjacent_landmark(QVar, L1, L2), not invalid_landmark(L2) } 1
-    :- time(i(T,T1)), discrete(QVar), holds(p(T), QVar, land(L1), std).
+    holds(i(T, T1), QVar, land(L0), std) :
+        adjacent_landmark(QVar, L0, L1),
+        not invalid_landmark(L0);
+    holds(i(T, T1), QVar, land(L2), std) :
+        adjacent_landmark(QVar, L1, L2),
+        not invalid_landmark(L2) } 1
+    :- qstep(p(T), i(T,T1)),
+       time(i(T,T1)),
+       discrete(QVar),
+       holds(p(T), QVar, land(L1), std).
+
 1 { holds(p(T1), QVar, land(L1), std);
-    holds(p(T1), QVar, land(L0), std) : adjacent_landmark(QVar, L0, L1), not invalid_landmark(L0);
-    holds(p(T1), QVar, land(L2), std) : adjacent_landmark(QVar, L1, L2), not invalid_landmark(L2) } 1
-    :-                discrete(QVar), holds(i(T,T1), QVar, land(L1), std).
+    holds(p(T1), QVar, land(L0), std) :
+        adjacent_landmark(QVar, L0, L1),
+        not invalid_landmark(L0);
+    holds(p(T1), QVar, land(L2), std) :
+        adjacent_landmark(QVar, L1, L2),
+        not invalid_landmark(L2) } 1
+    :- qstep(i(T,T1), p(T1)),
+       time(p(T1)),
+       discrete(QVar),
+       holds(i(T,T1), QVar, land(L1), std).
 
 
 % Holds preconds

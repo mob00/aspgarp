@@ -134,6 +134,24 @@ self_activated_influence(T0,T1,V) :-
     not holds_precond(T0,P),
     holds_precond(T1,P).
 
+% An influence may become non-zero because its source has just crossed zero.
+% In that event the target may acquire the new derivative, but it cannot also
+% leave its current magnitude region in the same transition. The derivative
+% change must be represented by the intermediate point state first.
+source_activated_influence_motion(T0,T1,To) :-
+    qstep(T0,T1),
+    mag_changed(T0,T1,To),
+    holds_dir(T0,To,std),
+    rule(_,P,influence(Sign,From,To)),
+    holds_precond(T1,P),
+    holds_mag(T0,From,land(Z)),
+    zero_landmark(From,Z),
+    holds_mag(T1,From,M),
+    M != land(Z),
+    influence_dir(T1,From,To,D),
+    D != std,
+    not direction_supported(T0,To,D).
+
 % A changed causal context may introduce a newly supported derivative, unless
 % that support comes from a process whose activation depends on the target's
 % change itself.
@@ -142,7 +160,8 @@ dir_change_allowed(T0,T1,V) :-
     direction_support_changed(T0,T1,V),
     holds_dir(T1,V,D),
     direction_supported(T1,V,D),
-    not self_activated_influence(T0,T1,V).
+    not self_activated_influence(T0,T1,V),
+    not source_activated_influence_motion(T0,T1,V).
 
 % If the causal support for a non-neutral derivative disappears at an event,
 % the quantity may settle. Unlike a new non-neutral derivative, std needs no

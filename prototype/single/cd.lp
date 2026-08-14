@@ -76,7 +76,7 @@ net_influence_dir(T,To,std) :-
     not nonzero_influence(T,To).
 
 
-% Resolve two competing contributions when their ordering is known.
+% Resolve two competing contributions when their ordering is known (! Limitation: we only handle two contributions at a time).
 
 net_influence_dir(T,To,DA) :-
     competing_influences(T,A,B,To,DA,_),

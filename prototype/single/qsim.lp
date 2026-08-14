@@ -47,7 +47,7 @@
        time(i(T,T1)),
        not discrete(QVar),
        holds(p(T), QVar, interval(L1, L2), dec).
-1 { holds(i(T, T1), QVar, land(L1), std);
+1 { holds(i(T, T1), QVar, land(L1), QDir) : qdir(QDir);
     holds(i(T, T1), QVar, interval(L1, L2), inc) : qmag(QVar, interval(L1, L2));
     holds(i(T, T1), QVar, interval(L0, L1), dec) : qmag(QVar, interval(L0, L1)) } 1
     :- qstep(p(T), i(T,T1)),

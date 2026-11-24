@@ -24,6 +24,17 @@ qcn_known_relation(T,qvar(A),qvar(B),R) :-
     zero_landmark(C,Z),
     qcn_known_relation(T,qvar(C),landmark(C,Z),R).
 
+% Subtracting zero preserves the minuend. Any shared zero can serve as a reference.
+:- holds_constraint(T,minus(A,B,C)),
+   zero_landmark(V,Z),
+   qcn_holds_relation(T,qvar(B),landmark(V,Z),eq),
+   not qcn_holds_relation(T,qvar(A),qvar(C),eq).
+
+qcn_known_relation(T,qvar(A),qvar(C),eq) :-
+    holds_constraint(T,minus(A,B,C)),
+    zero_landmark(V,Z),
+    qcn_known_relation(T,qvar(B),landmark(V,Z),eq).
+
 %
 % Equal-ranked landmarks of A and B represent the same reference values. (This might be a strong assumption)
 %

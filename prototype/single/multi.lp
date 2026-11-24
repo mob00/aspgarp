@@ -1,8 +1,13 @@
 sim(s).
 
-% Cannon state (origin of transition)
-holds(S,V,Q,D) :- not time(p((S,from))), holds(i((S,from), (S,to)),V,Q,D).
-holds(S,V,Q,D) :- time(p((S,from))), holds( p((S,from)),V,Q,D).
+% Observations at the origin of each simulation's transition
+origin_time(S,p((S,from))) :- time(p((S,from))).
+origin_time(S,i((S,from),(S,to))) :-
+    time(i((S,from),(S,to))),
+    not time(p((S,from))).
+
+holds(S,V,Q,D) :- origin_time(S,T), holds(T,V,Q,D).
+origin_relation(S,Pair,R) :- origin_time(S,T), holds_relation(T,Pair,R).
 
 % Time steps and intervals
 1 { time(p((S,from))) ; time(p((S,to))) } 1 :- sim(S).

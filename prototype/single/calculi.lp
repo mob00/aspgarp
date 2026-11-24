@@ -34,20 +34,3 @@ qcn_known_relation(T,qvar(A),qvar(C),eq) :-
     holds_constraint(T,minus(A,B,C)),
     zero_landmark(V,Z),
     qcn_known_relation(T,qvar(B),landmark(V,Z),eq).
-
-%
-% Equal-ranked landmarks of A and B represent the same reference values. (This might be a strong assumption)
-%
-
-minus_operand_landmark_eq(T,A,B,LA,LB) :-
-    holds_constraint(T,minus(A,B,_)),
-    land_rank(A,LA,N),
-    land_rank(B,LB,N).
-
-qcn_constraint(T,landmark(A,LA),landmark(B,LB),eq) :-
-    minus_operand_landmark_eq(T,A,B,LA,LB),
-    qcn_edge(landmark(A,LA),landmark(B,LB)).
-
-qcn_constraint(T,landmark(B,LB),landmark(A,LA),eq) :-
-    minus_operand_landmark_eq(T,A,B,LA,LB),
-    qcn_edge(landmark(B,LB),landmark(A,LA)).

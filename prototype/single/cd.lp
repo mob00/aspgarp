@@ -26,95 +26,79 @@ influence_dir(T,From,To,Dir) :-
 % Influence resolution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% A completed QCN assigns a base relation to every pair. Such an assignment
-% is a consistency witness, not necessarily knowledge stated by the model.
-% Only an active algebraic constraint counts as a known ordering when
-% resolving competing influences.
-
-known_influence_relation(T,A,B,R) :-
-    holds_constraint(T,algebraic(A,R,B)).
-
-known_influence_relation(T,B,A,RI) :-
-    holds_constraint(T,algebraic(A,R,B)),
-    converse(point,R,RI).
-
-
-% Canonical pair of non-zero, opposing contributions to the same target.
-
-competing_influences(T,A,B,To,DA,DB) :-
-    influence_dir(T,A,To,DA),
-    influence_dir(T,B,To,DB),
-    A < B,
-    DA != std,
-    DB != std,
-    qdirNeg(DA,DB).
-
-has_opposing_influence(T,From,To) :-
-    competing_influences(T,From,_,To,_,_).
-
-has_opposing_influence(T,From,To) :-
-    competing_influences(T,_,From,To,_,_).
-
-
-% An unopposed contribution determines the net direction. This also covers
-% several contributions that all point in the same direction.
-
-net_influence_dir(T,To,D) :-
+% Opposite influences from the same source cancel exactly. Each remaining
+% nonzero contribution has the absolute magnitude of its source.
+direct_contribution(T,From,To,D) :-
     influence_dir(T,From,To,D),
     D != std,
-    not has_opposing_influence(T,From,To).
+    qdirNeg(D,Opposite),
+    not influence_dir(T,From,To,Opposite).
 
+opposing_direct_contributions(T,To) :-
+    direct_contribution(T,_,To,inc),
+    direct_contribution(T,_,To,dec).
 
-% If every contribution is zero, the net influence is zero.
+qcn_closure_needed(T) :-
+    opposing_direct_contributions(T,_).
 
-nonzero_influence(T,To) :-
-    influence_dir(T,_,To,D),
-    D != std.
+% Within each sign, compare absolute magnitudes using forced QCN orderings.
+% Across zero, a raw ordering gives no comparison of absolute magnitudes.
+magnitude_at_least(T,A,B) :-
+    mag_sign(T,A,pos), mag_sign(T,B,pos),
+    qcn_known_relation(T,qvar(A),qvar(B),(gt;eq)).
+
+magnitude_at_least(T,A,B) :-
+    mag_sign(T,A,neg), mag_sign(T,B,neg),
+    qcn_known_relation(T,qvar(A),qvar(B),(lt;eq)).
+
+% To test if a direction is possible, consider subsets of its contributors.
+% If a subset outnumbers all opposing sources forced to be at least as large
+% as one of its members, those contributors can dominate. Equivalently, some
+% cut in the magnitude ordering has more weight on that side. All other
+% differences between successive magnitudes can be arbitrarily small.
+balance_subset(T,To,D,From,one(From)) :-
+    opposing_direct_contributions(T,To),
+    direct_contribution(T,From,To,D).
+
+balance_subset(T,To,D,From,add(From,Subset)) :-
+    balance_subset(T,To,D,Last,Subset),
+    direct_contribution(T,From,To,D),
+    Last < From.
+
+balance_member(one(From),From) :- balance_subset(_,_,_,_,one(From)).
+balance_member(add(From,Rest),From) :- balance_subset(_,_,_,_,add(From,Rest)).
+balance_member(add(From,Rest),Source) :-
+    balance_subset(_,_,_,_,add(From,Rest)),
+    balance_member(Rest,Source).
+
+balance_opponent(T,To,D,Subset,Other) :-
+    balance_subset(T,To,D,_,Subset),
+    balance_member(Subset,From),
+    qdirNeg(D,Opposite),
+    direct_contribution(T,Other,To,Opposite),
+    magnitude_at_least(T,Other,From).
+
+net_influence_dir(T,To,D) :-
+    direct_contribution(T,_,To,D),
+    not opposing_direct_contributions(T,To).
+
+net_influence_dir(T,To,D) :-
+    balance_subset(T,To,D,_,Subset),
+    Contributors = #count { From : balance_member(Subset,From) },
+    Opponents = #count { Other : balance_opponent(T,To,D,Subset,Other) },
+    Contributors > Opponents.
+
+% A zero balance is possible when both signs are possible, or when neither
+% is possible and all admissible magnitudes therefore give exact balance.
+net_influence_dir(T,To,std) :-
+    net_influence_dir(T,To,inc),
+    net_influence_dir(T,To,dec).
 
 net_influence_dir(T,To,std) :-
     influence_dir(T,_,To,_),
-    not nonzero_influence(T,To).
+    not net_influence_dir(T,To,inc),
+    not net_influence_dir(T,To,dec).
 
-
-% Resolve two competing contributions when their ordering is known (! Limitation: we only handle two contributions at a time).
-
-net_influence_dir(T,To,DA) :-
-    competing_influences(T,A,B,To,DA,_),
-    known_influence_relation(T,A,B,gt).
-
-net_influence_dir(T,To,DB) :-
-    competing_influences(T,A,B,To,_,DB),
-    known_influence_relation(T,A,B,lt).
-
-net_influence_dir(T,To,std) :-
-    competing_influences(T,A,B,To,_,_),
-    known_influence_relation(T,A,B,eq).
-
-
-% With no stated ordering, Garp keeps all qualitative resolutions possible.
-% Importantly, this ambiguity is not turned into a persistent QCN relation.
-
-known_influence_order(T,A,B) :-
-    known_influence_relation(T,A,B,lt).
-
-known_influence_order(T,A,B) :-
-    known_influence_relation(T,A,B,eq).
-
-known_influence_order(T,A,B) :-
-    known_influence_relation(T,A,B,gt).
-
-unresolved_competing_influences(T,A,B,To,DA,DB) :-
-    competing_influences(T,A,B,To,DA,DB),
-    not known_influence_order(T,A,B).
-
-net_influence_dir(T,To,DA) :-
-    unresolved_competing_influences(T,_,_,To,DA,_).
-
-net_influence_dir(T,To,DB) :-
-    unresolved_competing_influences(T,_,_,To,_,DB).
-
-net_influence_dir(T,To,std) :-
-    unresolved_competing_influences(T,_,_,To,_,_).
 holds_precond(T,true) :-
     time(T).
 
@@ -195,14 +179,35 @@ violation(T) :- holds_constraint(T, value_correspondence(Q1,M1,Q2,M2)),
 % Garp proportionalities
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-violation(T) :- holds_constraint(T, proportionality(1,From,To)),
-   holds_dir(T,From,DFrom),
-   holds_dir(T,To,DTo),
-   DFrom != DTo.
-violation(T) :- holds_constraint(T, proportionality(-1,From,To)),
-   holds_dir(T,From,DFrom),
-   holds_dir(T,To,DTo),
-   not qdirNeg(DFrom,DTo).
+prop_dir(1,D,D) :- qdir(D).
+prop_dir(-1,D,DI) :- qdirNeg(D,DI).
+
+proportionality_target(T,To) :-
+    holds_constraint(T,proportionality(_,_,To)).
+
+proportionality_contribution(T,To,D) :-
+    holds_constraint(T,proportionality(P,From,To)),
+    holds_dir(T,From,DFrom),
+    prop_dir(P,DFrom,D),
+    D != std.
+
+net_proportionality_dir(T,To,D) :-
+    proportionality_contribution(T,To,D).
+
+% Opposing contributions can balance. Their relative strengths are unknown
+% because the encoding assigns only qualitative signs to derivatives.
+net_proportionality_dir(T,To,std) :-
+    proportionality_contribution(T,To,inc),
+    proportionality_contribution(T,To,dec).
+
+net_proportionality_dir(T,To,std) :-
+    proportionality_target(T,To),
+    not proportionality_contribution(T,To,_).
+
+violation(T) :-
+    proportionality_target(T,To),
+    holds_dir(T,To,D),
+    not net_proportionality_dir(T,To,D).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Garp direct influences

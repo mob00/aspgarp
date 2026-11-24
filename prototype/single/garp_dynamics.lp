@@ -110,21 +110,20 @@ precond_depends_on(P,V) :-
     precond(P,neg,Sub),
     precond_depends_on(Sub,V).
 
-self_activated_influence(T0,T1,V) :-
-    qstep(T0,T1),
-    mag_changed(T0,T1,V),
-    rule(_,P,influence(_,_,V)),
-    precond_depends_on(P,V),
-    not holds_precond(T0,P),
-    holds_precond(T1,P).
+causal_target(influence(Sign,From,To),To) :-
+    rule(_,_,influence(Sign,From,To)).
 
+causal_target(proportionality(Sign,From,To),To) :-
+    rule(_,_,proportionality(Sign,From,To)).
+
+% A newly active cause is circular when every active rule for that cause
+% depends on the target's magnitude change.
 self_activated_influence(T0,T1,V) :-
-    qstep(T0,T1),
     mag_changed(T0,T1,V),
-    rule(_,P,proportionality(_,_,V)),
-    precond_depends_on(P,V),
-    not holds_precond(T0,P),
-    holds_precond(T1,P).
+    causal_target(Cause,V),
+    holds_constraint(T1,Cause),
+    not holds_constraint(T0,Cause),
+    precond_depends_on(P,V) : rule(_,P,Cause), holds_precond(T1,P).
 
 % An influence may become non-zero because its source has just crossed zero.
 % In that event the target may acquire the new derivative, but it cannot also

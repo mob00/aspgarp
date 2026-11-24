@@ -15,34 +15,23 @@ qcn_edge(A,B) :-
 % Model constraints.
 
 qcn_constraint(T,qvar(V1),qvar(V2),R) :-
-    holds_constraint(T,algebraic(V1,R,V2)),
-    qcn_edge(qvar(V1),qvar(V2)).
-
-qcn_constraint(T,qvar(V2),qvar(V1),RI) :-
-    holds_constraint(T,algebraic(V1,R,V2)),
-    qcn_edge(qvar(V2),qvar(V1)),
-    converse(point,R,RI).
+    holds_constraint(T,algebraic(V1,R,V2)).
 
 qcn_constraint(T,landmark(V1,L1),landmark(V2,L2),R) :-
-    holds_constraint(T,landmark_relation(V1,land(L1),V2,land(L2),R)),
-    qcn_edge(landmark(V1,L1),landmark(V2,L2)).
-
-qcn_constraint(T,landmark(V2,L2),landmark(V1,L1),RI) :-
-    holds_constraint(T,landmark_relation(V1,land(L1),V2,land(L2),R)),
-    qcn_edge(landmark(V2,L2),landmark(V1,L1)),
-    converse(point,R,RI).
+    holds_constraint(T,landmark_relation(V1,land(L1),V2,land(L2),R)).
 
 
 % Landmark ordering constraints.
 
 qcn_constraint(T,landmark(V,L1),landmark(V,L2),lt) :-
     adjacent_landmark(V,L1,L2),
-    qcn_edge(landmark(V,L1),landmark(V,L2)),
     time(T).
 
-qcn_constraint(T,landmark(V,L2),landmark(V,L1),gt) :-
-    adjacent_landmark(V,L1,L2),
-    qcn_edge(landmark(V,L2),landmark(V,L1)),
+% Numeric zero is shared across quantity spaces.
+qcn_constraint(T,landmark(A,ZA),landmark(B,ZB),eq) :-
+    zero_landmark(A,ZA),
+    zero_landmark(B,ZB),
+    qcn_edge(landmark(A,ZA),landmark(B,ZB)),
     time(T).
 
 
@@ -56,13 +45,6 @@ qcn_raw_relation(T,qvar(V),landmark(V,L1),gt) :-
 
 qcn_raw_relation(T,qvar(V),landmark(V,L2),lt) :-
     holds_mag(T,V,interval(L1,L2)).
-
-
-% Value-correspondent landmarks must have the same ordering as their variables.
-
-qcn_raw_relation(T,landmark(V1,L1),landmark(V2,L2),eq) :-
-    holds_constraint(T,value_correspondence(V1,land(L1),V2,land(L2))),
-    time(T).
 
 
 % Canonicalize raw relations.
@@ -88,6 +70,10 @@ qcn_relation(T,B,A,RI) :-
 
 % Access relations independent of their canonical storage direction.
 
+qcn_holds_relation(T,A,A,eq) :-
+    time(T),
+    qcn_node(A).
+
 qcn_holds_relation(T,A,B,R) :-
     qcn_relation(T,A,B,R).
 
@@ -98,9 +84,37 @@ qcn_holds_relation(T,A,B,R) :-
 
 % Enforce model and derived constraints.
 
-:- qcn_constraint(T,A,B,_),
-   qcn_relation(T,A,B,R),
-   not qcn_constraint(T,A,B,R).
+:- qcn_constraint(T,A,B,R),
+   not qcn_holds_relation(T,A,B,R).
+
+% Infer forced orderings when requested. Complete assignments may contain
+% additional relations chosen to witness consistency.
+qcn_known_relation(T,A,A,eq) :-
+    qcn_closure_needed(T),
+    qcn_node(A).
+
+qcn_known_relation(T,A,B,R) :-
+    qcn_closure_needed(T),
+    qcn_constraint(T,A,B,R).
+
+qcn_known_relation(T,A,B,R) :-
+    qcn_closure_needed(T),
+    qcn_raw_relation(T,A,B,R).
+
+qcn_known_relation(T,B,A,RI) :-
+    qcn_known_relation(T,A,B,R),
+    converse(point,R,RI),
+    A != B.
+
+forced_composition(R1,R2,R) :-
+    composition(point,R1,R2,R),
+    1 = #count { R3 : composition(point,R1,R2,R3) }.
+
+qcn_known_relation(T,A,C,R3) :-
+    qcn_known_relation(T,A,B,R1),
+    qcn_known_relation(T,B,C,R2),
+    A != B, B != C, A != C,
+    forced_composition(R1,R2,R3).
 
 
 % Enforce algebraic closure for every ordered triple of distinct QCN nodes.

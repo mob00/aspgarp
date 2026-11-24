@@ -18,10 +18,11 @@ qcn_cnh_allowed(R1,R2) :-
    qcn_relation(T1,A,B,R1),
    not qcn_cnh_allowed(R0,R1).
 
-% Fixed landmarks keep their relative order across a step.
+% Fixed points keep their relative order across a step.
 :- qstep(T0,T1),
-   qcn_relation(T0,landmark(A,LA),landmark(B,LB),R0),
-   qcn_relation(T1,landmark(A,LA),landmark(B,LB),R1),
+   qcn_fixed_node(A), qcn_fixed_node(B),
+   qcn_relation(T0,A,B,R0),
+   qcn_relation(T1,A,B,R1),
    R0 != R1.
 
 % Compare derivatives over the interval, since a point can mark a change

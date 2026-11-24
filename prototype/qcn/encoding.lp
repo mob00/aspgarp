@@ -3,7 +3,10 @@
 qcn_node(qvar(V)) :-
     qvar(V).
 
-qcn_node(landmark(V,L)) :-
+qcn_node(A) :-
+    qcn_fixed_node(A).
+
+qcn_fixed_node(landmark(V,L)) :-
     landmark(V,L).
 
 qcn_edge(A,B) :-

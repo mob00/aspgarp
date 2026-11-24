@@ -54,13 +54,14 @@ relation_change_dir(eq,lt,dec).
    holds_dir(i(From,To),B,DB),
    DA != DB.
 
-% Two stationary variables may not change their relation in the same step.
+% Variables that stay at the same magnitude with a steady derivative keep
+% their relative order. Discrete jumps change magnitude while keeping std.
 :- qstep(T0,T1),
    qcn_edge(qvar(A),qvar(B)),
-   holds_dir(T0,A,std),
-   holds_dir(T0,B,std),
-   holds_dir(T1,A,std),
-   holds_dir(T1,B,std),
+   holds(T0,A,MA,std),
+   holds(T1,A,MA,std),
+   holds(T0,B,MB,std),
+   holds(T1,B,MB,std),
    qcn_relation(T0,qvar(A),qvar(B),R0),
    qcn_relation(T1,qvar(A),qvar(B),R1),
    R0 != R1.

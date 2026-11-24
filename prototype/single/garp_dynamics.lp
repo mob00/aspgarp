@@ -15,15 +15,17 @@ direction_supported(T,To,D) :-
     net_proportionality_dir(T,To,D).
 
 % Exogenous quantities may take any derivative.
-direction_supported(T,V,D) :-
+exogenous_at(T,V) :-
     exogenous(V),
-    qdir(D),
+    time(T).
+
+exogenous_at(T,V) :-
+    exogenous(V,T),
     time(T).
 
 direction_supported(T,V,D) :-
-    exogenous(V,T),
-    qdir(D),
-    time(T).
+    exogenous_at(T,V),
+    qdir(D).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,6 +48,13 @@ dir_changed(T0,T1,V) :-
     holds_dir(T0,V,D0),
     holds_dir(T1,V,D1),
     D0 != D1.
+
+% An external change can supply a new derivative even when the set of
+% supported directions stays the same across the step.
+dir_change_allowed(T0,T1,V) :-
+    dir_changed(T0,T1,V),
+    exogenous_at(T0,V),
+    exogenous_at(T1,V).
 
 mag_changed(T0,T1,V) :-
     qstep(T0,T1),

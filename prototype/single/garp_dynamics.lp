@@ -8,19 +8,11 @@
 % Direction support
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-prop_dir(1,D,D) :-
-    qdir(D).
-
-prop_dir(-1,D,DI) :-
-    qdirNeg(D,DI).
-
 direction_supported(T,To,D) :-
     net_influence_dir(T,To,D).
 
-direction_supported(T,To,DTo) :-
-    holds_constraint(T,proportionality(P,From,To)),
-    holds_dir(T,From,DFrom),
-    prop_dir(P,DFrom,DTo).
+direction_supported(T,To,D) :-
+    net_proportionality_dir(T,To,D).
 
 % Exogenous quantities may take any derivative.
 direction_supported(T,V,D) :-
@@ -174,14 +166,16 @@ dir_change_allowed(T0,T1,V) :-
     holds_dir(T1,V,std),
     not direction_supported(T1,V,D0).
 
-dir_change_allowed(i(from,to),p(to),V) :-
-    holds(i(from,to),V,interval(_,L),inc),
-    holds(p(to),V,land(L),std),
+dir_change_allowed(i(From,To),p(To),V) :-
+    qstep(i(From,To),p(To)),
+    holds(i(From,To),V,interval(_,L),inc),
+    holds(p(To),V,land(L),std),
     last_landmark(V,L).
 
-dir_change_allowed(i(from,to),p(to),V) :-
-    holds(i(from,to),V,interval(L,_),dec),
-    holds(p(to),V,land(L),std),
+dir_change_allowed(i(From,To),p(To),V) :-
+    qstep(i(From,To),p(To)),
+    holds(i(From,To),V,interval(L,_),dec),
+    holds(p(To),V,land(L),std),
     first_landmark(V,L).
 
 :- dir_changed(T0,T1,V),

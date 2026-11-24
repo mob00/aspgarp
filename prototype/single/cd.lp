@@ -41,7 +41,7 @@ opposing_direct_contributions(T,To) :-
 qcn_closure_needed(T) :-
     opposing_direct_contributions(T,_).
 
-% Within each sign, compare absolute magnitudes using forced QCN orderings.
+% Within each sign, compare absolute magnitudes using known or observed orderings.
 % Across zero, a raw ordering gives no comparison of absolute magnitudes.
 magnitude_at_least(T,A,B) :-
     mag_sign(T,A,pos), mag_sign(T,B,pos),

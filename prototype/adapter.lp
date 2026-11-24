@@ -23,6 +23,13 @@ obs(holds_relation((From,To),Rel)):-
     obs_time(T),
     holds_relation(T,(From,To),Rel),
     observable(relation(From, To)).
+
+% An observed ordering is part of the candidate state and constrains its
+% influence balance.
+qcn_known_relation(T,qvar(From),qvar(To),Rel) :-
+    qcn_closure_needed(T),
+    observable(relation(From,To)),
+    holds_relation(T,(From,To),Rel).
     
 obsT(holds(0,Var,Mag,Dir)) :-
     time(T),

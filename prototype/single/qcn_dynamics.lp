@@ -38,6 +38,15 @@ relation_change_dir(eq,lt,dec).
    qdirNeg(DB,NegatedDB),
    not qdirsum(DA,NegatedDB,Difference).
 
+% Continuous quantities that are equal throughout an interval have the same
+% derivative sign. At a point, they can meet or separate with different signs.
+:- time(i(From,To)),
+   qcn_relation(i(From,To),qvar(A),qvar(B),eq),
+   not discrete(A), not discrete(B),
+   holds_dir(i(From,To),A,DA),
+   holds_dir(i(From,To),B,DB),
+   DA != DB.
+
 % Two stationary variables may not change their relation in the same step.
 :- qstep(T0,T1),
    qcn_edge(qvar(A),qvar(B)),

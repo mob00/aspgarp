@@ -17,7 +17,10 @@ component(influence(1,Q,R)) :- qvar(Q), qvar(R), Q != R.
 component(influence(-1,Q,R)) :- qvar(Q), qvar(R), Q != R.
 component(correspondence(1,Q, R)) :- qvar(Q), qvar(R), Q < R.
 component(correspondence(-1,Q, R)) :- qvar(Q), qvar(R), Q < R.
-component(value_correspondence(Q, land(QLM), R, land(RLM))) :- qvar(Q), qvar(R), Q != R, landmark(Q, QLM), landmark(R, RLM).
+component(value_correspondence(Q,land(QLM),R,land(RLM))) :-
+    qvar(Q), qvar(R), Q != R,
+    qmag(Q,land(QLM)),
+    qmag(R,land(RLM)).
 
 0 {abduced(rule(RULE_ID, PC, COMPONENT)) : precond_ids(PC), component(COMPONENT) } 1 :- rule_ids(RULE_ID).
 :- abduced(rule(SOME, PC, COMPONENT)), abduced(rule(OTHER, PC2, COMPONENT)), SOME != OTHER.

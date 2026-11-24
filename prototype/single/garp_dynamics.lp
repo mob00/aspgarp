@@ -29,14 +29,31 @@ direction_supported(T,V,D) :-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Rule 1: no non-neutral derivative without directional support
+% Rule 1: motion must be grounded in a direct influence or an external driver
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+grounded_direction(T,V,D) :-
+    holds_dir(T,V,D),
+    D != std,
+    net_influence_dir(T,V,D).
+
+grounded_direction(T,V,D) :-
+    holds_dir(T,V,D),
+    D != std,
+    exogenous_at(T,V).
+
+% Propagate grounded motion along active proportionalities with matching signs.
+grounded_direction(T,To,D) :-
+    grounded_direction(T,From,DFrom),
+    holds_constraint(T,proportionality(Sign,From,To)),
+    prop_dir(Sign,DFrom,D),
+    holds_dir(T,To,D).
 
 :- time(T),
    qvar(V),
    holds_dir(T,V,D),
    D != std,
-   not direction_supported(T,V,D).
+   not grounded_direction(T,V,D).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -50,17 +50,17 @@ relative_qmag(V,interval(X,Y),interval(U,W),neg)  :- qmag(V,interval(X,Y)), qmag
 land_before(Q,L1,L2) :- adjacent_landmark(Q,L1,L2).
 land_before(Q,L1,L3) :- adjacent_landmark(Q,L1,L2), land_before(Q,L2,L3).
 
-land_rank(Q,L,N) :-
-    landmark(Q,L),
-    not invalid_landmark(L),
-    N = #count {
-        P : land_before(Q,P,L),
-            landmark(Q,P),
-            not invalid_landmark(P)
-    }.
+qmag_start(Q,land(L),L) :- qmag(Q,land(L)).
+qmag_start(Q,interval(L,U),L) :- qmag(Q,interval(L,U)).
 
-qmag_rank(Q,land(L),I) :- qmag(Q,land(L)), land_rank(Q,L,N), I = 2 * N.
-qmag_rank(Q,interval(L1,L2),I) :- qmag(Q,interval(L1,L2)), land_rank(Q,L1,N), I = 2 * N + 1.
+% Count assignable magnitudes before this one. When a point and an interval
+% share a lower endpoint, the point comes first.
+qmag_rank(Q,M,I) :-
+    qmag_start(Q,M,L),
+    I = #count {
+        P : qmag_start(Q,P,Start), land_before(Q,Start,L);
+        land(L) : qmag(Q,land(L)), M != land(L)
+    }.
 
 qspace_max_rank(Q,Max) :-
     qvar(Q),

@@ -21,6 +21,12 @@ qcn_constraint(T,numeric_zero,landmark(V,Z),eq) :-
 subtraction_comparison(T,A,B,C) :- holds_constraint(T,minus(A,B,C)).
 subtraction_comparison(T,A,C,B) :- holds_constraint(T,minus(A,B,C)).
 
+% A subtraction has a single result for each pair of operands.
+qcn_constraint(T,qvar(C),qvar(D),eq) :-
+    subtraction_comparison(T,A,B,C),
+    subtraction_comparison(T,A,B,D),
+    C < D.
+
 :- subtraction_comparison(T,A,B,C),
    qcn_holds_relation(T,qvar(A),qvar(B),R),
    not qcn_holds_relation(T,qvar(C),numeric_zero,R).

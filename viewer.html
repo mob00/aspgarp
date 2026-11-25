@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASPGARP model viewer</title>
+<style>
+  body { margin: 1rem; font: 13px monospace; }
+  #status { white-space: pre-wrap; }
+  #status:empty { display: none; }
+  svg { width: 100%; height: 85vh; touch-action: none; }
+  .node { cursor: grab; }
+  .node:active { cursor: grabbing; }
+  .node rect { fill: white; stroke: black; }
+  text { text-anchor: middle; dominant-baseline: middle; }
+  .landmarks, .edge text { font-size: 11px; }
+  .edge path { fill: none; stroke: black; }
+  .edge text { paint-order: stroke; stroke: white; stroke-width: 4px; }
+</style>
+<p>Drag nodes to save their positions.</p>
+<p id="status" role="status">Loading model…</p>
+<svg id="diagram" aria-label="Causal model diagram">
+  <defs>
+    <marker id="arrow" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
+      <path d="M 0 0 L 7 3.5 L 0 7 Z"></path>
+    </marker>
+  </defs>
+  <g id="edges"></g>
+  <g id="nodes"></g>
+</svg>
+<script>
+const svg = document.querySelector("#diagram");
+const status = document.querySelector("#status");
+const nodeLayer = document.querySelector("#nodes");
+const edgeLayer = document.querySelector("#edges");
+let current, drag, saveError;
+
+function element(tag, attributes, parent) {
+  const result = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [key, value] of Object.entries(attributes)) result.setAttribute(key, value);
+  parent.append(result);
+  return result;
+}
+
+function nodePoint(event) {
+  return new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function boundary(node, x, y) {
+  const dx = x - node.x, dy = y - node.y;
+  const scale = 1 / (Math.max(Math.abs(dx) / node.halfWidth, Math.abs(dy) / node.halfHeight) || 1);
+  return [node.x + dx * scale, node.y + dy * scale];
+}
+
+function draw() {
+  for (const node of current.nodes.values()) {
+    node.element.setAttribute("transform", `translate(${node.x},${node.y})`);
+  }
+  for (const edge of current.edges) {
+    const a = current.nodes.get(edge.source), b = current.nodes.get(edge.target);
+    let path, x, y;
+    if (a === b) {
+      const lift = 48 + 20 * Math.abs(edge.bend);
+      const top = a.y - a.halfHeight;
+      path = `M ${a.x - 22} ${top} C ${a.x - 55} ${top - lift}, ${a.x + 55} ${top - lift}, ${a.x + 22} ${top}`;
+      x = a.x;
+      y = top - lift * .76;
+    } else {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const bend = edge.bend * 72;
+      const cx = (a.x + b.x) / 2 - dy * bend / length;
+      const cy = (a.y + b.y) / 2 + dx * bend / length;
+      const [sx, sy] = boundary(a, cx, cy);
+      const [tx, ty] = boundary(b, cx, cy);
+      path = `M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`;
+      x = (sx + 2 * cx + tx) / 4;
+      y = (sy + 2 * cy + ty) / 4 - 8;
+    }
+    edge.path.setAttribute("d", path);
+    edge.text.setAttribute("x", x);
+    edge.text.setAttribute("y", y);
+  }
+}
+
+function show(data) {
+  const previous = current?.nodes;
+  nodeLayer.replaceChildren();
+  edgeLayer.replaceChildren();
+  const nodes = new Map();
+  const lineHeight = 15;
+  const tallest = Math.max(0, ...data.graph.nodes.map(node => node.landmarks.length));
+  const rowHeight = Math.max(145, tallest * lineHeight + 70);
+  for (const [index, modelNode] of data.graph.nodes.entries()) {
+    const halfHeight = 18 + modelNode.landmarks.length * lineHeight / 2;
+    const prior = previous?.get(modelNode.id);
+    const [x, y] = prior ? [prior.x, prior.y]
+      : data.positions[modelNode.id] ?? [
+        140 + (index % 4) * 245,
+        Math.max(95, halfHeight + 35) + Math.floor(index / 4) * rowHeight
+      ];
+    const group = element("g", {class: "node"}, nodeLayer);
+    const box = element("rect", {y: -halfHeight, height: halfHeight * 2}, group);
+    const text = element("text", {y: 18 - halfHeight}, group);
+    text.textContent = modelNode.id;
+    let textWidth = text.getComputedTextLength();
+    for (const [index, name] of modelNode.landmarks.entries()) {
+      const landmark = element("text", {class: "landmarks", y: 18 - halfHeight + (index + 1) * lineHeight}, group);
+      landmark.textContent = name;
+      textWidth = Math.max(textWidth, landmark.getComputedTextLength());
+    }
+    const halfWidth = Math.max(45, textWidth / 2 + 13);
+    box.setAttribute("x", -halfWidth);
+    box.setAttribute("width", halfWidth * 2);
+    const node = {x, y, halfWidth, halfHeight, element: group};
+    nodes.set(modelNode.id, node);
+    group.addEventListener("pointerdown", event => {
+      if (drag || event.button !== 0) return;
+      const cursor = nodePoint(event);
+      drag = {id: modelNode.id, node, pointer: event.pointerId, x: cursor.x - node.x, y: cursor.y - node.y};
+      svg.setPointerCapture(event.pointerId);
+    });
+  }
+
+  const groups = new Map();
+  for (const edge of data.graph.edges) {
+    const key = JSON.stringify([edge.source, edge.target].sort());
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(edge);
+  }
+  const edges = [];
+  for (const group of groups.values()) {
+    for (const [index, edge] of group.entries()) {
+      const item = element("g", {class: "edge"}, edgeLayer);
+      const path = element("path", edge.directed ? {"marker-end": "url(#arrow)"} : {}, item);
+      element("title", {}, item).textContent = edge.rule;
+      const text = element("text", {}, item);
+      text.textContent = edge.label;
+      const offset = edge.source === edge.target ? index : index - (group.length - 1) / 2;
+      const bend = edge.source <= edge.target ? offset : -offset;
+      edges.push({...edge, path, text, bend});
+    }
+  }
+  const width = Math.max(1030, ...[...nodes.values()].map(node => node.x + node.halfWidth + 40));
+  const height = Math.max(460, ...[...nodes.values()].map(node => node.y + node.halfHeight + 40));
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  current = {nodes, edges, width, height, revision: data.revision};
+  draw();
+}
+
+svg.addEventListener("pointermove", event => {
+  if (!drag || drag.pointer !== event.pointerId) return;
+  const cursor = nodePoint(event);
+  const left = drag.node.halfWidth + 10;
+  drag.node.x = Math.round(Math.max(left, Math.min(current.width - left, cursor.x - drag.x)));
+  const top = drag.node.halfHeight + 10;
+  drag.node.y = Math.round(Math.max(top, Math.min(current.height - top, cursor.y - drag.y)));
+  draw();
+});
+svg.addEventListener("pointerup", async event => {
+  if (!drag || drag.pointer !== event.pointerId) return;
+  const {id, node} = drag;
+  drag = null;
+  try {
+    const response = await fetch("/api/position", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({node: id, position: [node.x, node.y]})
+    });
+    if (!response.ok) throw new Error((await response.json()).error);
+    saveError = null;
+  } catch (error) {
+    saveError = `Layout save failed: ${error.message}`;
+    status.textContent = saveError;
+  }
+});
+svg.addEventListener("lostpointercapture", () => { drag = null; });
+
+async function refresh() {
+  try {
+    const response = await fetch("/api/model");
+    if (!response.ok) throw new Error(response.statusText);
+    const data = await response.json();
+    if (!drag && data.revision !== current?.revision) show(data);
+    status.textContent = saveError || data.error || (data.graph.nodes.length ? "" : "No quantities to display.");
+  } catch (error) {
+    status.textContent = `Viewer connection lost: ${error.message}`;
+  } finally {
+    setTimeout(refresh, 750);
+  }
+}
+refresh();
+</script>

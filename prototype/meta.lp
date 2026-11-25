@@ -31,14 +31,9 @@ rule(RULE_ID, PC, COMPONENT) :- abduced(rule(RULE_ID, PC, COMPONENT)).
 abduced(precond(PC,true)) :- precond_ids(PC).
 precond(PC, true) :- abduced(precond(PC, true)).
 
-%SYMMETRY BREAKING:
-comp_id(C,N) :-
-    component(C),
-    N = #count { C2 : component(C2), C2 < C }.
-
+% Assign generated components to rule IDs in ascending term order.
 :- abduced(rule(R1,_,C1)),
    abduced(rule(R2,_,C2)),
    R1 < R2,
-   comp_id(C1,N1),
-   comp_id(C2,N2),
-   N1 > N2.
+   component(C1), component(C2),
+   C1 > C2.

@@ -28,8 +28,10 @@ invalid_landmark(inf;minf).
 qmag(V,land(X))         :- landmark(V,X), not invalid_landmark(X).
 qmag(V,interval(X,Y))   :- adjacent_landmark(V,X,Y), not discrete(V).
 
-relative_qmag(V,land(X),land(Y),neg)  :- adjacent_landmark(V,X,Y).
-relative_qmag(V,land(X),land(Z),neg)  :- adjacent_landmark(V,X,Y), relative_qmag(V,land(Y),land(Z),neg).
+land_before(Q,L1,L2) :- adjacent_landmark(Q,L1,L2).
+land_before(Q,L1,L3) :- adjacent_landmark(Q,L1,L2), land_before(Q,L2,L3).
+
+relative_qmag(V,land(X),land(Y),neg)  :- land_before(V,X,Y).
 relative_qmag(V,land(X),land(X),zero) :- landmark(V,X), not invalid_landmark(X).
 relative_qmag(V,land(Y),land(X),pos)  :- relative_qmag(V,land(X),land(Y),neg).
 
@@ -46,9 +48,6 @@ relative_qmag(V,interval(X,Y),interval(U,W),neg)  :- qmag(V,interval(X,Y)), qmag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Quantity-space mirror
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-land_before(Q,L1,L2) :- adjacent_landmark(Q,L1,L2).
-land_before(Q,L1,L3) :- adjacent_landmark(Q,L1,L2), land_before(Q,L2,L3).
 
 qmag_start(Q,land(L),L) :- qmag(Q,land(L)).
 qmag_start(Q,interval(L,U),L) :- qmag(Q,interval(L,U)).

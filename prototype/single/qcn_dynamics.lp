@@ -11,11 +11,17 @@ qcn_cnh_allowed(R1,R2) :-
     cnhs(point,R1,R2).
 
 
-% A QCN relation may only change via the conceptual neighbourhood.
+qcn_discrete_jump(T0,T1,qvar(V)) :-
+    discrete(V),
+    mag_changed(T0,T1,V).
+
+% Relations follow the conceptual neighbourhood unless an endpoint jumps.
 :- qstep(T0,T1),
    qcn_edge(A,B),
    qcn_relation(T0,A,B,R0),
    qcn_relation(T1,A,B,R1),
+   not qcn_discrete_jump(T0,T1,A),
+   not qcn_discrete_jump(T0,T1,B),
    not qcn_cnh_allowed(R0,R1).
 
 % Fixed points keep their relative order across a step.

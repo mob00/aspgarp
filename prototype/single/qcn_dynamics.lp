@@ -30,28 +30,44 @@ qcn_cnh_allowed(R1,R2) :-
 step_interval(p(A),i(A,B),i(A,B)) :- qstep(p(A),i(A,B)).
 step_interval(i(A,B),p(B),i(A,B)) :- qstep(i(A,B),p(B)).
 
+interval_direction(i(From,To),qvar(V),D) :-
+    time(i(From,To)),
+    holds_dir(i(From,To),V,D),
+    not discrete(V).
+
+interval_direction(i(From,To),Node,std) :-
+    time(i(From,To)),
+    qcn_fixed_node(Node).
+
+% QSIM handles a quantity's own magnitude boundaries, including fixed
+% points that coincide with one of its landmarks.
+qcn_magnitude_boundary(T,qvar(V),Node) :-
+    qmag(V,land(L)),
+    qcn_fixed_node(Node),
+    qcn_holds_relation(T,landmark(V,L),Node,eq).
+
 relation_change_dir(lt,eq,inc).
 relation_change_dir(eq,gt,inc).
 relation_change_dir(gt,eq,dec).
 relation_change_dir(eq,lt,dec).
 
 :- step_interval(T0,T1,I),
-   qcn_relation(T0,qvar(A),qvar(B),R0),
-   qcn_relation(T1,qvar(A),qvar(B),R1),
+   qcn_relation(T0,A,B,R0),
+   qcn_relation(T1,A,B,R1),
    relation_change_dir(R0,R1,Difference),
-   not discrete(A), not discrete(B),
-   holds_dir(I,A,DA),
-   holds_dir(I,B,DB),
+   interval_direction(I,A,DA),
+   interval_direction(I,B,DB),
+   not qcn_magnitude_boundary(I,A,B),
+   not qcn_magnitude_boundary(I,B,A),
    qdirNeg(DB,NegatedDB),
    not qdirsum(DA,NegatedDB,Difference).
 
-% Continuous quantities that are equal throughout an interval have the same
-% derivative sign. At a point, they can meet or separate with different signs.
-:- time(i(From,To)),
-   qcn_relation(i(From,To),qvar(A),qvar(B),eq),
-   not discrete(A), not discrete(B),
-   holds_dir(i(From,To),A,DA),
-   holds_dir(i(From,To),B,DB),
+% Equality throughout an interval requires matching derivative signs.
+:- qcn_relation(I,A,B,eq),
+   interval_direction(I,A,DA),
+   interval_direction(I,B,DB),
+   not qcn_magnitude_boundary(I,A,B),
+   not qcn_magnitude_boundary(I,B,A),
    DA != DB.
 
 % Variables that stay at the same magnitude with a steady derivative keep

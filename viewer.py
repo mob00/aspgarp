@@ -1,4 +1,4 @@
-"""Watch an ASPGARP model and serve its causal diagram on localhost."""
+"""Watch an ASPGARP model and serve its diagrams on localhost."""
 
 import argparse
 from graphlib import CycleError, TopologicalSorter
@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
 from pathlib import Path
+from subprocess import CalledProcessError
 from tempfile import NamedTemporaryFile
 from threading import Lock
 
@@ -93,9 +94,12 @@ def diagram(files):
 
 
 class Viewer:
-    def __init__(self, files, metadata):
+    def __init__(self, files, metadata, simulator=None):
         self.files = files
         self.metadata = metadata
+        self.simulator = simulator
+        self.state_svg = None
+        self.simulation_error = None
         self.signature = None
         self.revision = 0
         self.graph = {"nodes": [], "edges": []}
@@ -130,12 +134,30 @@ class Viewer:
                     self.error = None
                 except (OSError, ValueError) as error:
                     self.error = str(error)
+                else:
+                    if self.simulator is not None:
+                        self.refresh_simulation()
         return {
             "revision": self.revision,
             "graph": self.graph,
             "error": self.error,
             "positions": self.positions,
+            "simulate": self.simulator is not None,
+            "has_state_graph": self.state_svg is not None,
+            "simulation_error": self.simulation_error,
         }
+
+    def refresh_simulation(self):
+        try:
+            from graphviz import Source
+            from src.aspgarp.export import to_dot
+
+            result = self.simulator(*self.files)
+            self.state_svg = Source(to_dot(result)).pipe(format="svg", quiet=True) if result.states else None
+        except (ImportError, OSError, RuntimeError, ValueError, CalledProcessError) as error:
+            self.simulation_error = str(error)
+            return
+        self.simulation_error = None
 
     def move(self, node, position):
         if not any(item["id"] == node for item in self.graph["nodes"]):
@@ -180,6 +202,13 @@ def handler(viewer, page):
                 with lock:
                     snapshot = viewer.snapshot()
                 self.json_reply(200, snapshot)
+            elif self.path.partition("?")[0] == "/state.svg":
+                with lock:
+                    image = viewer.state_svg
+                if image is None:
+                    self.send_error(404)
+                else:
+                    self.reply(200, "image/svg+xml", image)
             else:
                 self.send_error(404)
 
@@ -215,6 +244,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("model", type=Path, help="A model folder or a standalone ASP model file")
     parser.add_argument("--metadata", type=Path, help="Path to the layout JSON file")
+    parser.add_argument("--simulate", action="store_true", help="Also compute and display the state graph")
     args = parser.parse_args()
     model = args.model.resolve()
     if model.is_dir():
@@ -230,7 +260,12 @@ def main():
         for file in files:
             if not file.is_file():
                 raise FileNotFoundError(f"Model file not found: {file}")
-        viewer = Viewer(files, metadata)
+        simulator = None
+        if args.simulate:
+            from src.aspgarp.simulation import simulate
+
+            simulator = simulate
+        viewer = Viewer(files, metadata, simulator)
         with ThreadingHTTPServer(("127.0.0.1", 0), handler(viewer, PAGE.read_bytes())) as server:
             print(f"Open http://127.0.0.1:{server.server_port}/", flush=True)
             print(f"Layout: {metadata}", flush=True)

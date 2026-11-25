@@ -5,9 +5,15 @@
 <title>ASPGARP model viewer</title>
 <style>
   body { margin: 1rem; font: 13px monospace; }
-  #status { white-space: pre-wrap; }
-  #status:empty { display: none; }
-  svg { width: 100%; height: 85vh; touch-action: none; }
+  .status { white-space: pre-wrap; }
+  .status:empty { display: none; }
+  .diagrams > section { min-width: 0; }
+  h2 { font-size: 1rem; }
+  @media (min-width: 900px) {
+    .with-state { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  }
+  svg { display: block; width: 100%; height: auto; touch-action: none; }
+  #state-graph { max-width: 100%; }
   .node { cursor: grab; }
   .node:active { cursor: grabbing; }
   .node rect { fill: white; stroke: black; }
@@ -16,23 +22,36 @@
   .edge path { fill: none; stroke: black; }
   .edge text { paint-order: stroke; stroke: white; stroke-width: 4px; }
 </style>
-<p>Drag nodes to save their positions.</p>
-<p id="status" role="status">Loading model…</p>
-<svg id="diagram" aria-label="Causal model diagram">
-  <defs>
-    <marker id="arrow" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
-      <path d="M 0 0 L 7 3.5 L 0 7 Z"></path>
-    </marker>
-  </defs>
-  <g id="edges"></g>
-  <g id="nodes"></g>
-</svg>
+<main class="diagrams">
+  <section>
+    <h2>Causal model</h2>
+    <p id="status" class="status" role="status">Loading model…</p>
+    <svg id="diagram" aria-label="Causal model">
+      <defs>
+        <marker id="arrow" markerWidth="7" markerHeight="7" refX="7" refY="3.5" orient="auto">
+          <path d="M 0 0 L 7 3.5 L 0 7 Z"></path>
+        </marker>
+      </defs>
+      <g id="edges"></g>
+      <g id="nodes"></g>
+    </svg>
+  </section>
+  <section id="state-panel" hidden>
+    <h2>State graph</h2>
+    <p id="state-status" class="status" role="status"></p>
+    <img id="state-graph" alt="State graph" draggable="false" hidden>
+  </section>
+</main>
 <script>
 const svg = document.querySelector("#diagram");
+const diagrams = document.querySelector(".diagrams");
+const statePanel = document.querySelector("#state-panel");
+const stateStatus = document.querySelector("#state-status");
+const stateGraph = document.querySelector("#state-graph");
 const status = document.querySelector("#status");
 const nodeLayer = document.querySelector("#nodes");
 const edgeLayer = document.querySelector("#edges");
-let current, drag, saveError;
+let current, drag, saveError, latest;
 
 function element(tag, attributes, parent) {
   const result = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -82,19 +101,19 @@ function draw() {
   }
 }
 
-function show(data) {
+function show(graph, positions, revision) {
   const previous = current?.nodes;
   nodeLayer.replaceChildren();
   edgeLayer.replaceChildren();
   const nodes = new Map();
   const lineHeight = 15;
-  const tallest = Math.max(0, ...data.graph.nodes.map(node => node.landmarks.length));
+  const tallest = Math.max(0, ...graph.nodes.map(node => node.landmarks.length));
   const rowHeight = Math.max(145, tallest * lineHeight + 70);
-  for (const [index, modelNode] of data.graph.nodes.entries()) {
+  for (const [index, modelNode] of graph.nodes.entries()) {
     const halfHeight = 18 + modelNode.landmarks.length * lineHeight / 2;
     const prior = previous?.get(modelNode.id);
     const [x, y] = prior ? [prior.x, prior.y]
-      : data.positions[modelNode.id] ?? [
+      : positions[modelNode.id] ?? [
         140 + (index % 4) * 245,
         Math.max(95, halfHeight + 35) + Math.floor(index / 4) * rowHeight
       ];
@@ -122,7 +141,7 @@ function show(data) {
   }
 
   const groups = new Map();
-  for (const edge of data.graph.edges) {
+  for (const edge of graph.edges) {
     const key = JSON.stringify([edge.source, edge.target].sort());
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(edge);
@@ -143,7 +162,7 @@ function show(data) {
   const width = Math.max(1030, ...[...nodes.values()].map(node => node.x + node.halfWidth + 40));
   const height = Math.max(460, ...[...nodes.values()].map(node => node.y + node.halfHeight + 40));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  current = {nodes, edges, width, height, revision: data.revision};
+  current = {nodes, edges, width, height, revision};
   draw();
 }
 
@@ -167,6 +186,7 @@ svg.addEventListener("pointerup", async event => {
       body: JSON.stringify({node: id, position: [node.x, node.y]})
     });
     if (!response.ok) throw new Error((await response.json()).error);
+    latest.positions[id] = [node.x, node.y];
     saveError = null;
   } catch (error) {
     saveError = `Layout save failed: ${error.message}`;
@@ -175,13 +195,26 @@ svg.addEventListener("pointerup", async event => {
 });
 svg.addEventListener("lostpointercapture", () => { drag = null; });
 
+function render() {
+  statePanel.hidden = !latest.simulate;
+  diagrams.classList.toggle("with-state", latest.simulate);
+  if (!drag && latest.revision !== current?.revision) show(latest.graph, latest.positions, latest.revision);
+  status.textContent = latest.error || saveError || (latest.graph.nodes.length ? "" : "No quantities to display.");
+
+  if (!latest.simulate) return;
+  stateGraph.hidden = !latest.has_state_graph;
+  const source = `/state.svg?revision=${latest.revision}`;
+  if (latest.has_state_graph && stateGraph.getAttribute("src") !== source) stateGraph.src = source;
+  stateStatus.textContent = latest.simulation_error ? `State graph failed: ${latest.simulation_error}`
+    : latest.has_state_graph || latest.error ? "" : "Simulation produced no valid states.";
+}
+
 async function refresh() {
   try {
     const response = await fetch("/api/model");
     if (!response.ok) throw new Error(response.statusText);
-    const data = await response.json();
-    if (!drag && data.revision !== current?.revision) show(data);
-    status.textContent = saveError || data.error || (data.graph.nodes.length ? "" : "No quantities to display.");
+    latest = await response.json();
+    render();
   } catch (error) {
     status.textContent = `Viewer connection lost: ${error.message}`;
   } finally {

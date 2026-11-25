@@ -55,23 +55,23 @@ def _simulate_steps(paths: tuple[Path, ...]):
 
 
 def simulate(model: str | Path, reference: str | Path | None = None) -> StateGraph:
-    """Load a model directory or explicit database and reference files.
+    """Load a model directory, a standalone file, or a database/reference pair.
 
     Each state contains its observable holds/3 and holds_relation/2 symbols.
     State IDs follow the sorted observations and are stable for the same graph.
     """
     model = Path(model)
-    if reference is None:
-        if not model.is_dir():
-            raise ValueError(f"Expected a model directory or two model files: {model}")
-        database, reference_file = model / "db.lp", model / "ref.lp"
+    if reference is not None:
+        model_files = (model, Path(reference))
+    elif model.is_dir():
+        model_files = (model / "db.lp", model / "ref.lp")
     else:
-        database, reference_file = model, Path(reference)
-    for path in (database, reference_file):
+        model_files = (model,)
+    for path in model_files:
         if not path.is_file():
             raise FileNotFoundError(f"Model file not found: {path}")
 
-    paths = (database, reference_file, *(ASP_DIR / name for name in SIMULATION_FILES))
+    paths = (*model_files, *(ASP_DIR / name for name in SIMULATION_FILES))
     point_states = set()
     steps = set()
     for point, step in _simulate_steps(paths):

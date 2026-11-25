@@ -10,7 +10,7 @@ from src.aspgarp.simulation import simulate
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate an ASPGARP state graph.")
-    parser.add_argument("model", type=Path, help="Model directory or database file")
+    parser.add_argument("model", type=Path, help="Model directory, standalone model file, or database file")
     parser.add_argument("reference", type=Path, nargs="?", help="Reference file when passing a database file")
     parser.add_argument("--format", choices=("asp", "dot"), default="asp", help="Output format (default: asp)")
     parser.add_argument("-o", "--output", type=Path, help="Write to this file instead of stdout")

@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 import sys
 
-from src.aspgarp.export import to_dot, to_facts
+from src.aspgarp.export import to_dot, to_facts, to_table
 from src.aspgarp.simulation import simulate
 
 
@@ -12,13 +12,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate an ASPGARP state graph.")
     parser.add_argument("model", type=Path, help="Model directory, standalone model file, or database file")
     parser.add_argument("reference", type=Path, nargs="?", help="Reference file when passing a database file")
-    parser.add_argument("--format", choices=("asp", "dot"), default="asp", help="Output format (default: asp)")
+    formats = {"asp": to_facts, "dot": to_dot, "table": to_table}
+    parser.add_argument("--format", choices=formats, default="asp", help="Output format (default: asp)")
     parser.add_argument("-o", "--output", type=Path, help="Write to this file instead of stdout")
     args = parser.parse_args(argv)
 
     try:
         graph = simulate(args.model, args.reference)
-        output = to_dot(graph) if args.format == "dot" else to_facts(graph)
+        output = formats[args.format](graph)
         if args.output is None:
             sys.stdout.write(output)
         else:

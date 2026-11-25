@@ -1,5 +1,5 @@
 #AI:X
-"""Serialize a state graph for ASP or Graphviz."""
+"""Serialize a state graph as ASP facts, tables, or DOT."""
 
 import clingo
 
@@ -18,6 +18,28 @@ def to_facts(graph: StateGraph) -> str:
             lines.append(f"{atom}.")
     lines.extend(f"edge(({source},{target}))." for source, target in graph.transitions)
     return "".join(f"{line}\n" for line in lines)
+
+
+def state_tables(graph: StateGraph) -> dict[str, list]:
+    """Return state observations and a source-by-target adjacency matrix."""
+    states = [[str(observation) for observation in state] for state in graph.states]
+    size = len(states)
+    matrix = [[0] * size for _ in range(size)]
+    for source, target in graph.transitions:
+        matrix[source][target] = 1
+    return {"states": states, "matrix": matrix}
+
+
+def to_table(graph: StateGraph) -> str:
+    """Return tab-separated state and adjacency tables."""
+    data = state_tables(graph)
+    states = data["states"]
+    lines = ["States", "State\tObservations"]
+    for index, observations in enumerate(states):
+        lines.append(f"{index}\t{' '.join(observations) or '—'}")
+    lines.extend(("", "Adjacency matrix", "\t".join(["From / To", *map(str, range(len(states)))])))
+    lines.extend("\t".join(map(str, [index, *row])) for index, row in enumerate(data["matrix"]))
+    return "\n".join(lines) + "\n"
 
 
 def to_dot(graph: StateGraph) -> str:

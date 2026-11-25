@@ -14,6 +14,12 @@
   }
   svg { display: block; width: 100%; height: auto; touch-action: none; }
   #state-graph { max-width: 100%; }
+  #state-tables { overflow-x: auto; }
+  table { border-collapse: collapse; margin-bottom: 1rem; }
+  caption { text-align: left; font-weight: bold; }
+  th, td { border: 1px solid #bbb; padding: .25rem .4rem; vertical-align: top; }
+  #states-table td { white-space: pre-wrap; overflow-wrap: anywhere; }
+  #adjacency-table td { text-align: center; }
   .node { cursor: grab; }
   .node:active { cursor: grabbing; }
   .node rect { fill: white; stroke: black; }
@@ -40,6 +46,10 @@
     <h2>State graph</h2>
     <p id="state-status" class="status" role="status"></p>
     <img id="state-graph" alt="State graph" draggable="false" hidden>
+    <div id="state-tables" hidden>
+      <table id="states-table"><caption>States</caption><thead></thead><tbody></tbody></table>
+      <table id="adjacency-table"><caption>Adjacency matrix</caption><thead></thead><tbody></tbody></table>
+    </div>
   </section>
 </main>
 <script>
@@ -48,6 +58,9 @@ const diagrams = document.querySelector(".diagrams");
 const statePanel = document.querySelector("#state-panel");
 const stateStatus = document.querySelector("#state-status");
 const stateGraph = document.querySelector("#state-graph");
+const stateTables = document.querySelector("#state-tables");
+const statesTable = document.querySelector("#states-table");
+const adjacencyTable = document.querySelector("#adjacency-table");
 const status = document.querySelector("#status");
 const nodeLayer = document.querySelector("#nodes");
 const edgeLayer = document.querySelector("#edges");
@@ -195,6 +208,24 @@ svg.addEventListener("pointerup", async event => {
 });
 svg.addEventListener("lostpointercapture", () => { drag = null; });
 
+function fillTable(table, headings, rows) {
+  const header = table.tHead.insertRow();
+  for (const heading of headings) {
+    const cell = document.createElement("th");
+    cell.scope = "col";
+    cell.textContent = heading;
+    header.append(cell);
+  }
+  for (const [id, values] of rows.entries()) {
+    const row = table.tBodies[0].insertRow();
+    const key = document.createElement("th");
+    key.scope = "row";
+    key.textContent = id;
+    row.append(key);
+    for (const value of values) row.insertCell().textContent = value;
+  }
+}
+
 function render() {
   statePanel.hidden = !latest.simulate;
   diagrams.classList.toggle("with-state", latest.simulate);
@@ -203,9 +234,18 @@ function render() {
 
   if (!latest.simulate) return;
   stateGraph.hidden = !latest.has_state_graph;
+  stateTables.hidden = !latest.state_tables;
   const source = `/state.svg?revision=${latest.revision}`;
   if (latest.has_state_graph && stateGraph.getAttribute("src") !== source) stateGraph.src = source;
-  stateStatus.textContent = latest.simulation_error ? `State graph failed: ${latest.simulation_error}`
+  if (latest.state_tables && stateTables.dataset.revision !== String(latest.revision)) {
+    for (const section of stateTables.querySelectorAll("thead, tbody")) section.replaceChildren();
+    const {states, matrix} = latest.state_tables;
+    fillTable(statesTable, ["State", "Observations"], states.map(state => [state.join("\n") || "—"]));
+    fillTable(adjacencyTable, ["From / To", ...states.keys()], matrix);
+    stateTables.dataset.revision = latest.revision;
+  }
+  stateStatus.textContent = latest.simulation_error ? `Simulation failed: ${latest.simulation_error}`
+    : latest.state_render_error ? `Showing tables because SVG rendering failed: ${latest.state_render_error}`
     : latest.has_state_graph || latest.error ? "" : "Simulation produced no valid states.";
 }
 

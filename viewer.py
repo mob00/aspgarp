@@ -99,6 +99,8 @@ class Viewer:
         self.metadata = metadata
         self.simulator = simulator
         self.state_svg = None
+        self.state_tables = None
+        self.state_render_error = None
         self.simulation_error = None
         self.signature = None
         self.revision = 0
@@ -144,20 +146,31 @@ class Viewer:
             "positions": self.positions,
             "simulate": self.simulator is not None,
             "has_state_graph": self.state_svg is not None,
+            "state_tables": self.state_tables,
+            "state_render_error": self.state_render_error,
             "simulation_error": self.simulation_error,
         }
 
     def refresh_simulation(self):
         try:
-            from graphviz import Source
-            from src.aspgarp.export import to_dot
-
             result = self.simulator(*self.files)
-            self.state_svg = Source(to_dot(result)).pipe(format="svg", quiet=True) if result.states else None
-        except (ImportError, OSError, RuntimeError, ValueError, CalledProcessError) as error:
+        except (OSError, RuntimeError, ValueError) as error:
             self.simulation_error = str(error)
             return
         self.simulation_error = None
+        self.state_svg = self.state_tables = self.state_render_error = None
+        if not result.states:
+            return
+
+        from src.aspgarp.export import state_tables, to_dot
+
+        try:
+            from graphviz import Source
+
+            self.state_svg = Source(to_dot(result)).pipe(format="svg", quiet=True)
+        except (ImportError, OSError, RuntimeError, ValueError, CalledProcessError) as error:
+            self.state_tables = state_tables(result)
+            self.state_render_error = str(error)
 
     def move(self, node, position):
         if not any(item["id"] == node for item in self.graph["nodes"]):

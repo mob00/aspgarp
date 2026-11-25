@@ -106,31 +106,18 @@
        not discrete(QVar),
        holds(i(T, T1), QVar, land(L1), std).
 
-% Discrete versions of state transitions
-1 { holds(i(T, T1), QVar, land(L1), std);
-    holds(i(T, T1), QVar, land(L0), std) :
-        adjacent_landmark(QVar, L0, L1),
-        not invalid_landmark(L0);
-    holds(i(T, T1), QVar, land(L2), std) :
-        adjacent_landmark(QVar, L1, L2),
-        not invalid_landmark(L2) } 1
-    :- qstep(p(T), i(T,T1)),
-       time(i(T,T1)),
+% A discrete quantity may stay at its landmark or move to a valid neighbour.
+1 { holds(To, QVar, land(Current), std);
+    holds(To, QVar, land(Lower), std) :
+        adjacent_landmark(QVar, Lower, Current),
+        not invalid_landmark(Lower);
+    holds(To, QVar, land(Upper), std) :
+        adjacent_landmark(QVar, Current, Upper),
+        not invalid_landmark(Upper) } 1
+    :- qstep(From, To),
+       time(To),
        discrete(QVar),
-       holds(p(T), QVar, land(L1), std).
-
-1 { holds(p(T1), QVar, land(L1), std);
-    holds(p(T1), QVar, land(L0), std) :
-        adjacent_landmark(QVar, L0, L1),
-        not invalid_landmark(L0);
-    holds(p(T1), QVar, land(L2), std) :
-        adjacent_landmark(QVar, L1, L2),
-        not invalid_landmark(L2) } 1
-    :- qstep(i(T,T1), p(T1)),
-       time(p(T1)),
-       discrete(QVar),
-       holds(i(T,T1), QVar, land(L1), std).
-
+       holds(From, QVar, land(Current), std).
 
 % Holds preconds
 precond(X,OP) :- precond(X,OP,_).
